@@ -1,14 +1,16 @@
-require "lunit"
+local lunit = require "lunit"
 
-module("test_assignment", lunit.testcases)
+module("test_assignment", lunit.testcases, package.seeall)
 
-function set_constrants_correctly()
+function test_set_constrants_correctly()
+  assert_false( false, "This test never fails.")
   -- var a = new Assignment(testerSalt);
   -- a.set('foo', 12);
   -- expect(a.get('foo')).toBe(12);
 end
 
 function work_with_uniform_choice()
+  assert_false( false, "This test never fails.")
   -- var a = new Assignment(testerSalt);
   -- var choices = ['a', 'b'];
   -- a.set('foo', new UniformChoice({'choices': choices, 'unit': testerUnit}));
@@ -21,6 +23,7 @@ function work_with_uniform_choice()
 end
 
 function work_with_overrides()
+  assert_false( false, "This test never fails.")
   -- var a = new Assignment(testerSalt);
   -- a.setOverrides({'x': 42, 'y': 43});
   -- a.set('x', 5);
@@ -30,6 +33,7 @@ function work_with_overrides()
 end
 
 function work_with_falsy_overrides()
+  assert_false( false, "This test never fails.")
   -- var a = new Assignment(testerSalt);
   -- a.setOverrides({'x': 0, 'y': '', 'z': false});
   -- a.set('x', 5);

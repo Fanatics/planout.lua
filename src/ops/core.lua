@@ -95,7 +95,7 @@ function Cond:execute(mapper)
   local list = self:getArgList('cond')
   for i, val in ipairs(list) do
     ifClause = val['if']
-    if mapper.evaluate(ifClause) the return mapper.evaluate(val['then']) end
+    if mapper.evaluate(ifClause) then return mapper.evaluate(val['then']) end
   end
   return nil
 end
@@ -198,7 +198,7 @@ end
 
 Round = PlanOutOpUnary:new();
 
-function Round:unaryExecute(value
+function Round:unaryExecute(value)
   return round(value)
 end
 

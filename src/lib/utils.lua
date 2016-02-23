@@ -27,7 +27,7 @@ function map(obj, func, context)
 end
 
 function round(x)
-  if x%2 ~= 0.5
+  if x%2 ~= 0.5 then
     return math.floor(x+0.5)
   end
   return x-0.5
@@ -46,4 +46,28 @@ function deepcopy(orig)
         copy = orig
     end
     return copy
+end
+
+function shallowcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in pairs(orig) do
+            copy[orig_key] = orig_value
+        end
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
+function table.slice(tbl, first, last, step)
+  local sliced = {}
+
+  for i = first or 1, last or #tbl, step or 1 do
+    sliced[#sliced+1] = tbl[i]
+  end
+
+  return sliced
 end

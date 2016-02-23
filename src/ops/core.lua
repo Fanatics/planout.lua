@@ -215,7 +215,7 @@ function Not:getUnaryString()
 end
 
 
-Negative = PlanOutOpUnary:new();
+Negative = PlanOutOpUnary:new()
 
 function Negative:unaryExecute(value)
   return 0 - value
@@ -230,4 +230,29 @@ Length = PlanOutOpUnary:new();
 
 function Length:unaryExecute(value)
   return #value
+end
+
+
+Min = PlanOutOpCommutative:new()
+
+function Min:commutativeExecute(values)
+  return math.min(unpack(values))
+end
+
+
+
+Max = PlanOutOpCommutative:new()
+
+function Max:commutativeExecute(values)
+  return math.max(unpack(values))
+end
+
+
+Map = PlanOutOpSimple:new()
+
+function Map:simpleExecute()
+  local copy = deepcopy(self.args)
+  copy.op = nil
+  copy.salt = nil
+  return copy
 end

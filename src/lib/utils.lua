@@ -71,3 +71,21 @@ function table.slice(tbl, first, last, step)
 
   return sliced
 end
+
+function instanceOf (subject, super)
+	super = tostring(super)
+	local mt = getmetatable(subject)
+
+	while true do
+		if mt == nil then return false end
+		if tostring(mt) == super then return true end
+
+		mt = getmetatable(mt)
+	end
+end
+
+function tablelength(T)
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
+end

@@ -1,5 +1,5 @@
 require("lib.utils")
-local pretty = require 'pl.pretty'
+JSON = require "lib.JSON"
 
 Assignment = {}
 
@@ -64,9 +64,11 @@ function Assignment:del(name)
 end
 
 function Assignment:toString()
-  return tostring(self.data)
+  return JSON:encode(self.data)
 end
 
 function Assignment:length()
   return tablelength(self.data)
 end
+
+return Assignment

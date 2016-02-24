@@ -89,3 +89,15 @@ function tablelength(T)
   for _ in pairs(T) do count = count + 1 end
   return count
 end
+
+table.indexOf = function( t, object )
+	if "table" == type( t ) then
+		for i=1,#t do
+			if object == t[i] then
+				return i
+			end
+		end
+	end
+
+	return -1
+end

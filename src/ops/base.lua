@@ -83,7 +83,7 @@ function PlanOutOpUnary:getUnaryString()
 end
 
 function PlanOutOpUnary:unaryExecute(value)
-    error "Not implemented"
+  error "Not implemented"
 end
 
 -- Base PlanOut object --

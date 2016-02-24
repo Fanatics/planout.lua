@@ -37,3 +37,8 @@ local operators = {
     "weightedChoice" = WeightedChoice,
     "sample" = Sample
   }
+
+function operatorInstance(params)
+  if params.op == nil or operators[params.op] == nil then error "Unknown Operator" end
+  return operators[params.op]:new(params)
+end

@@ -32,7 +32,7 @@ Return = PlanOutOp:new()
 
 function Return:execute(mapper)
   local value = mapper:evaluate(self:getArgMixed('value'))
-  error(topPlanOutException:new(value ~= false and value ~= 0))
+  error(StopPlanOutException:new(value ~= false and value ~= 0))
 end
 
 Set = PlanOutOp:new()

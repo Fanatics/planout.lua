@@ -1,7 +1,6 @@
 require("lib.utils")
-JSON = require "lib.JSON"
-Assignment = require "assignment"
-local pretty = require 'pl.pretty'
+local JSON = require "lib.JSON"
+local Assignment = require "assignment"
 
 local Experiment = {}
 

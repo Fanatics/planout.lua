@@ -66,9 +66,9 @@ end
 function PlanOutOpSimple:execute(mapper)
   self.mapper = mapper
   for k,v in pairs(self.args) do
-    self.args[k] = mapper.evaluate(v)
+    self.args[k] = mapper:evaluate(v)
   end
-  return self:simpleExcute();
+  return self:simpleExecute();
 end
 
 -- Base PlanOut object --

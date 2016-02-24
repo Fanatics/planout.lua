@@ -101,3 +101,11 @@ table.indexOf = function( t, object )
 
 	return -1
 end
+
+function range(max)
+  local l = {}
+  for i = 1, max do
+    table.insert(l, i)
+  end
+  return l
+end

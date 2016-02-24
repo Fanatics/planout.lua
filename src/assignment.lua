@@ -1,5 +1,6 @@
 require("lib.utils")
 JSON = require "lib.JSON"
+local pretty = require 'pl.pretty'
 
 Assignment = {}
 

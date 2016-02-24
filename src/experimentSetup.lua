@@ -19,7 +19,7 @@ end
 function registerExperimentInput(key, value, experimentName)
   if experimentName == nil then globalInputArgs[key] = value
   else
-    if experimentSpecificInputArgs[experimentName] = nil then
+    if experimentSpecificInputArgs[experimentName] == nil then
       experimentSpecificInputArgs[experimentName] = {}
     end
     experimentSpecificInputArgs[experimentName][key] = value

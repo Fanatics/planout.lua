@@ -1,15 +1,14 @@
 package.path = package.path .. ";../?.lua"
 require("lib.utils")
+require("ops.base")
+
 local sha1 = require "lib.sha1"
 local pretty = require 'pl.pretty'
-
-require("base")
 
 PlanOutOpRandom = PlanOutOpSimple:new()
 
 function PlanOutOpRandom:init(args)
   self.args = args
-
   self.LONG_SCALE_NON_COMPAT = 0xFFFFFFFFFFFFF;
   return self
 end
@@ -37,7 +36,7 @@ function PlanOutOpRandom:getHash(appendedUnit)
   end
 
   local unitStr = table.concat(map(self:getUnit(appendedUnit), function (val)
-    return tostring(val)
+    return val .. ""
   end), ".")
   local hashStr = fullSalt .. "." .. unitStr
   local hash = sha1(hashStr)
@@ -115,7 +114,7 @@ Sample = PlanOutOpRandom:new()
 
 function Sample:sample(array, numDraws)
   local len = #array
-  local stoppingPoint = len - numDraws
+  local stoppingPoint = len - numDraws + 1
 
   for i, val in ipairs(array) do
     local j = self:getHash(i) % i

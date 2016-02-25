@@ -1,7 +1,9 @@
 package.path = package.path .. ";../src/?.lua;"
 local Assignment = require "assignment"
 
-local LuaUnit = require "resources.luaunit"
+EXPORT_ASSERT_TO_GLOBALS = true
+require("resources.luaunit")
+
 TestAssignment = {}
 
 local testerUnit = '4'
@@ -49,4 +51,5 @@ function TestAssignment:work_with_falsy_overrides()
   -- expect(a.get('z')).toEqual(false);
 end
 
-LuaUnit:run()
+local lu = LuaUnit.new()
+os.exit( lu:runSuite() )

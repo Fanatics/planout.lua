@@ -206,7 +206,10 @@ function SimpleNamespace:_assignDefaultExperiment()
   self._defaultExperiment = self.defaultExperimentClass:new(self.inputs);
 end
 
-
+function SimpleNamespace:defaultGet(name, default_val)
+  Namespace.requireDefaultExperiment(self)
+  return self._defaultExperiment:get(name, default_val)
+end
 
 function SimpleNamespace:getName()
   return self.name;
@@ -214,4 +217,65 @@ end
 
 function SimpleNamespace:setName(name)
   self.name = name;
+end
+
+function SimpleNamespace:previouslyLogged()
+  if self._experiment ~= nil then return self._experiment:previouslyLogged() end
+  return nil;
+end
+
+function SimpleNamespace:inExperiment()
+  Namespace.requireExperiment(self)
+  return self._inExperiment
+end
+
+function SimpleNamespace:setAutoExposureLogging(value)
+  self._autoExposureLogging = value
+  if self._defaultExperiment ~= nil then self._defaultExperiment:setAutoExposureLogging(value) end
+  if self._experiment ~= nil then self._experiment:setAutoExposureLogging(value) end
+end
+
+function SimpleNamespace:setGlobalOverride(name)
+  local globalOverrides = self:getOverrides()
+  if globalOverrides ~= nil and globalOverrides[name] ~= nil then
+    local overrides = globalOverrides[name]
+    if this.currentExperiments[overrides.experimentName] ~= nil then
+      self:_assignExperimentObject(overrides.experimentName)
+      self._experiment:addOverride(name, overrides.value)
+    end
+  end
+end
+
+function SimpleNamespace:getParams(experimentName)
+  Namespace.requireExperiment(self)
+  if self._experiment ~= nil and self:getOriginalExperimentName() == experimentName then return self._experiment:getParams() end
+  return nil
+end
+
+function SimpleNamespace:getOriginalExperimentName()
+  if self._experiment ~= nil then return self._experiment:getName() end
+  return nil
+end
+
+function SimpleNamespace:get(name, defaultVal)
+  Namespace.requireExperiment(self)
+  if self:allowedOverride() then self:setGlobalOverride(name) end
+
+  if self._experiment == nil then return self:defaultGet(name, defaultVal) end
+
+  if self._autoExposureLogging ~= nil then self._experiment:setAutoExposureLogging(self._autoExposureLogging) end
+
+  return self._experiment:get(name, self:defaultGet(name, defaultVal))
+end
+
+function SimpleNamespace:logExposure(extras)
+  Namespace.requireExperiment(self)
+  if self._experiment ~= nil then return self:logExposure(extras) end
+  return nil
+end
+
+function SimpleNamespace:logEvent(eventType, extras)
+  Namespace.requireExperiment(self)
+  if self._experiment ~= nil then return self:logEvent(eventType, extras) end
+  return nil
 end

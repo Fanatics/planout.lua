@@ -1,15 +1,20 @@
-local lunit = require "lunit"
+package.path = package.path .. ";../src/?.lua;"
+local Assignment = require "assignment"
 
-module("test_assignment", lunit.testcases, package.seeall)
+local LuaUnit = require "resources.luaunit"
+TestAssignment = {}
 
-function test_set_constrants_correctly()
+local testerUnit = '4'
+local testerSalt = 'test_salt'
+
+function TestAssignment:test_set_constrants_correctly()
   assert_false( false, "This test never fails.")
   -- var a = new Assignment(testerSalt);
   -- a.set('foo', 12);
   -- expect(a.get('foo')).toBe(12);
 end
 
-function work_with_uniform_choice()
+function TestAssignment:work_with_uniform_choice()
   assert_false( false, "This test never fails.")
   -- var a = new Assignment(testerSalt);
   -- var choices = ['a', 'b'];
@@ -22,7 +27,7 @@ function work_with_uniform_choice()
   -- expect(a.get('baz')).toEqual('a');
 end
 
-function work_with_overrides()
+function TestAssignment:work_with_overrides()
   assert_false( false, "This test never fails.")
   -- var a = new Assignment(testerSalt);
   -- a.setOverrides({'x': 42, 'y': 43});
@@ -32,7 +37,7 @@ function work_with_overrides()
   -- expect(a.get('y')).toEqual(43);
 end
 
-function work_with_falsy_overrides()
+function TestAssignment:work_with_falsy_overrides()
   assert_false( false, "This test never fails.")
   -- var a = new Assignment(testerSalt);
   -- a.setOverrides({'x': 0, 'y': '', 'z': false});
@@ -43,3 +48,5 @@ function work_with_falsy_overrides()
   -- expect(a.get('y')).toEqual('');
   -- expect(a.get('z')).toEqual(false);
 end
+
+LuaUnit:run()

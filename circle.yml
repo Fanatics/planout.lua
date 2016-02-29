@@ -1,0 +1,11 @@
+dependencies:
+  pre:
+    - sudo apt-get update
+    - sudo apt-get install lua5.1
+    - sudo apt-get install luarocks
+    - sudo luarocks install luafilesystem
+    - sudo luarocks install penlight
+test:
+  override:
+    - cd tests && lua testAssignment.lua -v && cd ..
+    - cd tests && lua testCoreOps.lua -v & cd ..

@@ -4,6 +4,10 @@ local pretty = require 'pl.pretty'
 
 require("ops.base")
 
+local jsIs = function(value)
+  return not (not value or value == 0)
+end
+
 Literal = PlanOutOp:new()
 
 function Literal:execute(mapper)
@@ -107,7 +111,7 @@ And = PlanOutOp:new()
 function And:execute(mapper)
   local list = self:getArgList('values')
   for i, val in ipairs(list) do
-    if not mapper:evaluate(val) then return false end
+    if not jsIs(mapper:evaluate(val)) then return false end
   end
   return true
 end
@@ -117,7 +121,7 @@ Or = PlanOutOp:new()
 function Or:execute(mapper)
   local list = self:getArgList('values')
   for i, val in ipairs(list) do
-    if  mapper:evaluate(val) then return true end
+    if jsIs(mapper:evaluate(val)) then return true end
   end
   return false
 end
@@ -137,7 +141,7 @@ end
 Sum = PlanOutOpCommutative:new()
 
 function Sum:commutativeExecute(values)
-  local result = 1
+  local result = 0
   for i, val in ipairs(values) do
     result = result + val
   end
@@ -208,7 +212,7 @@ end
 Not = PlanOutOpUnary:new();
 
 function Not:unaryExecute(value)
-  return not value
+  return not value or value == 0
 end
 
 function Not:getUnaryString()

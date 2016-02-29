@@ -48,7 +48,7 @@ end
 function Interpreter:getParams()
   local me = self
   if not self._evaluated then
-    local err = pcall(function()
+    local status, err = pcall(function()
       me:evaluate(me.serialization)
     end)
     if instanceOf(err, StopPlanOutException) then

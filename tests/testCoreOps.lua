@@ -40,7 +40,6 @@ function TestCoreOps:test_work_with_arr()
   for i, v in ipairs(a) do
     assert(v == arr[i])
   end
-  -- expect(arr).toEqual(a);
 end
 
 function TestCoreOps:test_work_with_get()
@@ -116,166 +115,163 @@ function TestCoreOps:test_work_with_coalesce()
 end
 
 function TestCoreOps:test_work_with_length()
-  assert(false)
-  -- var arr = [0, 1, 2, 3, 4, 5];
-  -- var length_test = runConfigSingle({'op': 'length', 'value': arr});
-  -- expect(length_test).toEqual(arr.length);
-  -- length_test = runConfigSingle({'op': 'length', 'value': []});
-  -- expect(length_test).toEqual(0);
-  -- length_test = runConfigSingle({'op': 'length', 'value':
-  --                                   {'op': 'array', 'values': arr}
-  --                                 });
-  -- expect(length_test).toEqual(arr.length);
+  local arr = {0, 1, 2, 3, 4, 5};
+  local length_test = runConfigSingle({['op'] = 'length', ['value'] = arr})
+  assert(length_test == #arr)
+
+  length_test = runConfigSingle({['op'] = 'length', ['value'] = {}})
+  assert(length_test == 0)
+
+  local length_test = runConfigSingle({['op'] = 'length',
+    ['value'] = {['op'] = 'array', ['values'] = arr}
+  })
+  assert(length_test == #arr)
 end
 
 function TestCoreOps:test_work_with_not()
-  assert(false)
-  -- var x = runConfigSingle({'op': 'not', 'value': 0})
-  -- expect(x).toBe(true);
-  --
-  -- x = runConfigSingle({'op': 'not', 'value': false});
-  -- expect(x).toBe(true);
-  --
-  -- x = runConfigSingle({'op': 'not', 'value': 1})
-  -- expect(x).toBe(false);
-  --
-  -- x = runConfigSingle({'op': 'not', 'value': true});
-  -- expect(x).toBe(false);
+  local x = runConfigSingle({['op'] = 'not', ['value'] = 0})
+  assert(x)
+
+  x = runConfigSingle({['op'] = 'not', ['value'] = false})
+  assert(x)
+
+  x = runConfigSingle({['op'] = 'not', ['value'] = 1})
+  assert_false(x)
+
+  x = runConfigSingle({['op'] = 'not', ['value'] = true})
+  assert_false(x)
 end
 
 function TestCoreOps:test_work_with_or()
-  assert(false)
-  -- var x = runConfigSingle({
-  --         'op': 'or',
-  --         'values': [0, 0, 0]})
-  -- expect(x).toBe(false);
-  --
-  -- x = runConfigSingle({
-  --     'op': 'or',
-  --     'values': [0, 0, 1]})
-  -- expect(x).toBe(true);
-  --
-  -- x = runConfigSingle({
-  --     'op': 'or',
-  --     'values': [false, true, false]})
-  -- expect(x).toBe(true);
+  local x = runConfigSingle({
+          ['op'] = 'or',
+          ['values'] = {0, 0, 0}})
+  assert_false(x)
+
+  x = runConfigSingle({
+          ['op'] = 'or',
+          ['values'] = {0, 0, 1}})
+  assert(x)
+
+  x = runConfigSingle({
+          ['op'] = 'or',
+          ['values'] = {false, true, false}})
+  assert(x)
 end
 
 function TestCoreOps:test_work_with_and()
-  assert(false)
- --  var x = runConfigSingle({
- --          'op': 'and',
- --          'values': [1, 1, 0]})
- --  expect(x).toEqual(false);
- --
- --  x = runConfigSingle({
- --      'op': 'and',
- --      'values': [0, 0, 1]})
- -- expect(x).toBe(false);
- --
- --  x = runConfigSingle({
- --      'op': 'and',
- --      'values': [true, true, true]})
- --  expect(x).toBe(true);
+  local x = runConfigSingle({
+          ['op'] = 'and',
+          ['values'] = {1, 1, 0}})
+  assert_false(x)
+
+  x = runConfigSingle({
+          ['op'] = 'and',
+          ['values'] = {0, 0, 1}})
+  assert_false(x)
+
+  x = runConfigSingle({
+          ['op'] = 'and',
+          ['values'] = {true, true, true}})
+  assert(x)
 end
 
  function TestCoreOps:test_work_with_commutative_ops()
-   assert(false)
-  --  var arr = [33, 7, 18, 21, -3];
-  --
-  -- var minTest = runConfigSingle({'op': 'min', 'values': arr});
-  -- expect(minTest).toEqual(-3);
-  --
-  -- var maxTest = runConfigSingle({'op': 'max', 'values': arr});
-  -- expect(maxTest).toEqual(33);
-  --
-  -- var sumTest = runConfigSingle({'op': 'sum', 'values': arr});
-  -- expect(sumTest).toEqual(76);
-  --
-  -- var productTest = runConfigSingle({'op': 'product', 'values': arr});
-  -- expect(productTest).toEqual(-261954);
+  local arr = {33, 7, 18, 21, -3}
+
+  local minTest = runConfigSingle({['op'] = 'min', ['values'] = arr})
+  assert(minTest == -3)
+
+  local maxTest = runConfigSingle({['op'] = 'max', ['values'] = arr})
+  assert(maxTest == 33)
+
+  local sumTest = runConfigSingle({['op'] = 'sum', ['values'] = arr})
+  assert(sumTest == 76)
+
+  local productTest = runConfigSingle({['op'] = 'product', ['values'] = arr})
+  assert(productTest == -261954)
 end
 
 function TestCoreOps:test_work_with_binary_ops()
-  assert(false)
-  -- var eq = runConfigSingle({'op': 'equals', 'left': 1, 'right': 2});
-  -- expect(eq).toEqual(1 == 2);
-  --
-  -- eq = runConfigSingle({'op': 'equals', 'left': 2, 'right': 2});
-  -- expect(eq).toEqual(2 == 2);
-  --
-  -- var gt = runConfigSingle({'op': '>', 'left': 1, 'right': 2});
-  -- expect(gt).toEqual(1 > 2);
-  --
-  -- var lt = runConfigSingle({'op': '<', 'left': 1, 'right': 2});
-  -- expect(lt).toEqual(1 < 2);
-  --
-  -- var gte = runConfigSingle({'op': '>=', 'left': 2, 'right': 2});
-  -- expect(gte).toEqual(2 >= 2);
-  -- gte = runConfigSingle({'op': '>=', 'left': 1, 'right': 2});
-  -- expect(gte).toEqual(1 >= 2);
-  --
-  -- var lte = runConfigSingle({'op': '<=', 'left': 2, 'right': 2});
-  -- expect(lte).toEqual(2 <= 2);
-  --
-  -- var mod = runConfigSingle({'op': '%', 'left': 11, 'right': 3});
-  -- expect(mod).toEqual(11 % 3);
-  --
-  -- var div = runConfigSingle({'op': '/', 'left': 3, 'right': 4})
-  -- expect(div).toEqual(0.75);
+  local eq = runConfigSingle({['op'] = 'equals', ['left'] = 1, ['right'] = 2})
+  assert(eq == (1 == 2))
+
+  eq = runConfigSingle({['op'] = 'equals', ['left'] = 2, ['right'] = 2})
+  assert(eq == (2 == 2))
+
+  local gt = runConfigSingle({['op'] = '>', ['left'] = 1, ['right'] = 2})
+  assert(gt == (1 > 2))
+
+  local lt = runConfigSingle({['op'] = '<', ['left'] = 1, ['right'] = 2})
+  assert(lt == (1 < 2))
+
+  local gte = runConfigSingle({['op'] = '>=', ['left'] = 2, ['right'] = 2})
+  assert(gte == (2 >= 2))
+
+  gte = runConfigSingle({['op'] = '>=', ['left'] = 1, ['right'] = 2})
+  assert(gte == (1 >= 2))
+
+  local lte = runConfigSingle({['op'] = '<=', ['left'] = 2, ['right'] = 2})
+  assert(lte == (2 <= 2))
+
+  local mod = runConfigSingle({['op'] = '%', ['left'] = 11, ['right'] = 3})
+  assert(mod == (11 % 3))
+
+  local div = runConfigSingle({['op'] = '/', ['left'] = 3, ['right'] = 4})
+  assert(div == (0.75))
 end
 
 function TestCoreOps:test_work_with_map()
-  assert(false)
-  -- let mapVal = {'a': 2, 'b': 'c', 'd': false };
-  -- let mapOp = runConfigSingle({'op': 'map', 'a': 2, 'b': 'c', 'd': false});
-  -- expect(mapOp).toEqual(mapVal);
-  --
-  -- let emptyMap = {};
-  -- let mapOp2 = runConfigSingle({'op': 'map'});
-  -- expect(emptyMap).toEqual(mapOp2);
+  local mapVal = {['a'] = 2, ['b'] = 'c', ['d'] = false };
+  local mapOp = runConfigSingle({['op'] = 'map', ['a'] = 2, ['b'] = 'c', ['d'] = false});
+
+  for k, v in pairs(mapVal) do assert(mapOp[k] == v) end
+  for k, v in pairs(mapOp) do assert(mapVal[k] == v) end
+
+  local mapOp2 = runConfigSingle({['op'] = 'map'});
+  assert(#mapOp2 == 0);
 end
 
 function TestCoreOps:test_work_with_return()
-  assert(false)
-  -- var returnRunner = function(return_value) {
-  --   var config = {
-  --       "op": "seq",
-  --       "seq": [
-  --           {
-  --             "op": "set",
-  --             "var": "x",
-  --             "value": 2
-  --           },
-  --           {
-  --               "op": "return",
-  --               "value": return_value
-  --           },
-  --           {
-  --               "op": "set",
-  --               "var": "y",
-  --               "value": 4
-  --           }
-  --       ]
-  --   };
-  --   var e = new Interpreter(config, 'test_salt');
-  --   return e;
-  -- };
-  -- var i = returnRunner(true);
-  -- expect(i.getParams()).toEqual({'x': 2});
-  -- expect(i.inExperiment()).toEqual(true);
-  --
-  -- i = returnRunner(42);
-  -- expect(i.getParams()).toEqual({ 'x': 2});
-  -- expect(i.inExperiment()).toEqual(true);
-  --
-  -- i = returnRunner(false);
-  -- expect(i.getParams()).toEqual({ 'x': 2});
-  -- expect(i.inExperiment()).toEqual(false);
-  --
-  -- i = returnRunner(0);
-  -- expect(i.getParams()).toEqual({ 'x': 2});
-  -- expect(i.inExperiment()).toEqual(false);
+
+  local returnRunner = function(return_value)
+    local config = {
+      ["op"] = "seq",
+      ["seq"] = {
+        {
+          ["op"] = "set",
+          ["var"] = "x",
+          ["value"] = 2
+        },
+        {
+          ["op"] = "return",
+          ["value"] = return_value
+        },
+        {
+          ["op"] = "set",
+          ["var"] = "y",
+          ["value"] = 4
+        }
+      }
+    }
+    return Interpreter:new(config, 'test_salt')
+  end
+
+  local i = returnRunner(true)
+  assert(i:getParams()['x'] == 2)
+  assert(i:inExperiment() == true)
+
+  i = returnRunner(42)
+  assert(i:getParams()['x'] == 2)
+  assert(i:inExperiment() == true)
+
+  i = returnRunner(false);
+  assert(i:getParams()['x'] == 2)
+  assert(i:inExperiment() == false)
+
+  i = returnRunner(0);
+  assert(i:getParams()['x'] == 2)
+  assert(i:inExperiment() == false)
 end
 
 local lu = LuaUnit.new()

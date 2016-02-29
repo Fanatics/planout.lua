@@ -1,4 +1,8 @@
 require("lib.utils")
+require("ops.utils")
+require("ops.core")
+
+local pretty = require 'pl.pretty'
 
 local Experiment = require "Experiment"
 local Assignment = require "Assignment"
@@ -19,7 +23,9 @@ function Interpreter:init(serialization, experimentSalt, inputs, environment)
   self._experimentSalt = experimentSalt
   self._evaluated = false
   self._inExperiment = false
-  self._inputs = shallowCopy(inputs)
+  self._inputs = shallowcopy(inputs)
+
+  return self
 end
 
 function Interpreter:inExperiment()
@@ -45,7 +51,7 @@ function Interpreter:getParams()
     local err = pcall(function()
       me:evaluate(me.serialization)
     end)
-    if err ~= nil and err.inExperiment ~= nil then
+    if instanceOf(err, StopPlanOutException) then
       self._inExperiment = err.inExperiment
     end
     self._evaluated = true
@@ -74,7 +80,8 @@ end
 
 function Interpreter:evaluate(planoutCode)
   if type(planoutCode) == "table" and planoutCode.op ~= nil then
-    return operatorInstance(planoutCode)
+    local oi = operatorInstance(planoutCode)
+    return oi:execute(self)
   elseif type(planoutCode) == "table" and planoutCode[1] ~= nil then
     local arr = {}
     for i, val in ipairs(planoutCode) do

@@ -1,118 +1,122 @@
-require "lunit"
+package.path = package.path .. ";../src/?.lua;"
+local Interpreter = require "interpreter"
 
-module("test_core_opts", lunit.testcases)
+local pretty = require 'pl.pretty'
 
--- function runConfig(config, init={}) {
---   var interpreter = new Interpreter(config, 'test_salt', init);
---   return interpreter.getParams();
--- }
---
--- function runConfigSingle(config) {
---   var xConfig = {'op': 'set', 'var': 'x', 'value': config};
---   return runConfig(xConfig)['x'];
--- }
+EXPORT_ASSERT_TO_GLOBALS = true
+require("resources.luaunit")
 
-function set_appropriately()
-  -- var c = {'op': 'set', 'value': 'x_val', 'var': 'x'}
-  -- var d = runConfig(c);
-  -- expect(d).toEqual({ 'x': 'x_val'});
+TestCoreOps = {}
+
+function runConfig(config, init)
+  local obj = Interpreter:new(config, 'test_salt', init or {})
+  return obj:getParams()
 end
 
-function work_with_seq()
-  -- var config = {'op': 'seq', 'seq': [
-  --         {'op': 'set', 'value': 'x_val', 'var': 'x'},
-  --         {'op': 'set', 'value': 'y_val', 'var': 'y'}
-  --     ]};
-  -- var d = runConfig(config)
-  -- expect(d).toEqual({'x': 'x_val', 'y': 'y_val'});
+function runConfigSingle(config)
+ local xConfig = {['op'] = 'set', ['var'] = 'x', ['value'] = config};
+ return runConfig(xConfig)['x']
 end
 
-function work_with_arr()
-  -- var arr = [4, 5, 'a'];
-  -- var a = runConfigSingle({'op': 'array', 'values': arr});
+function TestCoreOps:test_set_appropriately()
+  local c = {['op'] = 'set', ['value'] = 'x_val', ['var'] = 'x'}
+  local d = runConfig(c)
+  assert(d ~= nil and d['x'] == 'x_val')
+end
+
+function TestCoreOps:test_work_with_seq()
+  local c = {['op'] = 'seq', ['seq'] = {
+    {['op'] = 'set', ['value'] = 'x_val', ['var'] = 'x'},
+    {['op'] = 'set', ['value'] = 'y_val', ['var'] = 'y'}
+  }}
+  local d = runConfig(c)
+  assert(d ~= nil and d['x'] == 'x_val')
+  assert(d ~= nil and d['y'] == 'y_val')
+end
+
+function TestCoreOps:test_work_with_arr()
+  local arr = {4, 5, 'a'};
+  local a = runConfigSingle({['op'] = 'array', ['values'] = arr});
+  for i, v in ipairs(a) do
+    assert(v == arr[i])
+  end
   -- expect(arr).toEqual(a);
 end
 
-function work_with_get()
-  -- var d = runConfig({
-  --           'op': 'seq',
-  --           'seq': [
-  --               {'op': 'set', 'var': 'x', 'value': 'x_val'},
-  --               {'op': 'set', 'var': 'y', 'value': {'op': 'get', 'var': 'x'}}
-  --           ]
-  --       });
-  -- expect({'x': 'x_val', 'y': 'x_val'}).toEqual(d);
+function TestCoreOps:test_work_with_get()
+  local c = {['op'] = 'seq', ['seq'] = {
+    {['op'] = 'set', ['value'] = 'x_val', ['var'] = 'x'},
+    {['op'] = 'set', ['value'] = {['op'] = 'get', ['var'] = 'x'}, ['var'] = 'y'}
+  }}
+  local d = runConfig(c)
+  assert(d ~= nil and d['x'] == 'x_val')
+  assert(d ~= nil and d['y'] == 'x_val')
 end
 
-function work_with_cond()
-  -- var getInput = function(i, r) {
-  --   return {'op': 'equals', 'left': i, 'right': r};
-  -- };
-  -- var testIf = function(i) {
-  --   return runConfig({
-  --     'op': 'cond',
-  --       'cond': [
-  --           {'if': getInput(i, 0),
-  --            'then': {'op': 'set', 'var': 'x', 'value': 'x_0'}},
-  --           {'if': getInput(i, 1),
-  --            'then': {'op': 'set', 'var': 'x', 'value': 'x_1'}}
-  --       ]
-  --   });
-  -- };
-  -- expect(testIf(0)).toEqual({ 'x': 'x_0'});
-  -- expect(testIf(1)).toEqual({ 'x': 'x_1'});
+function TestCoreOps:test_work_with_cond()
+  local getInput = function(i, r)
+    return {['op'] = 'equals', ['left'] = i, ['right'] = r}
+  end
+  local testIf = function(i)
+    return runConfig({
+     ['op'] = 'cond',
+      ['cond'] = {
+           {['if'] = getInput(i, 0),
+            ['then'] = {['op'] = 'set', ['var'] = 'x', ['value'] = 'x_0'}},
+           {['if'] = getInput(i, 1),
+            ['then'] = {['op'] = 'set', ['var'] = 'x', ['value'] = 'x_1'}}
+     }
+  })
+end
+local zero = testIf(0)
+local one = testIf(1)
+assert(zero ~= nil and zero['x'] == 'x_0')
+assert(one ~= nil and one['x'] == 'x_1')
 end
 
-function work_with_index()
---   var arrayLiteral = [10, 20, 30];
+function TestCoreOps:test_work_with_index()
+  local arrayLiteral = {10, 20, 30}
 --   var objLiteral = {'a': 42, 'b': 43};
+  local objLiteral = { a = 42, b = 43}
 --
---   var x = runConfigSingle(
---       {'op': 'index', 'index': 0, 'base': arrayLiteral}
---   )
---   expect(x).toEqual(10);
---
---   x = runConfigSingle(
---       {'op': 'index', 'index': 2, 'base': arrayLiteral}
---   )
---   expect(x).toEqual(30);
---
---   x = runConfigSingle(
---       {'op': 'index', 'index': 'a', 'base': objLiteral}
---   )
---   expect(x).toEqual(42);
---
---   x = runConfigSingle(
---       {'op': 'index', 'index': 6, 'base': arrayLiteral}
---   )
---   expect(x).toBe(undefined);
---
---   x = runConfigSingle(
---       {'op': 'index', 'index': 'c', 'base': objLiteral}
---   )
---   expect(x).toBe(undefined);
---
---   x = runConfigSingle({
---       'op': 'index',
---       'index': 2,
---       'base': {'op': 'array', 'values': arrayLiteral}
---   });
---   expect(x).toEqual(30);
--- });
+  local x = runConfigSingle({['op'] = 'index', ['index'] = 1, ['base'] = arrayLiteral})-----------------------------------------
+  assert(x == 10)
+
+  x = runConfigSingle({['op'] = 'index', ['index'] = 3, ['base'] = arrayLiteral})
+  assert(x == 30)
+
+  x = runConfigSingle({['op'] = 'index', ['index'] = 'a', ['base'] = objLiteral})
+  assert(x == 42)
+
+  x = runConfigSingle({['op'] = 'index', ['index'] = 6, ['base'] = arrayLiteral})
+  assert(x == nil)
+
+  x = runConfigSingle({['op'] = 'index', ['index'] = 'c', ['base'] = objLiteral})
+  assert(x == nill)
+
+  x = runConfigSingle({
+    ['op'] = 'index',
+    ['index'] = 3,
+    ['base'] = {['op'] = 'array', ['values'] = arrayLiteral}
+  })
+
+  assert(x == 30)
 end
 
-function work_with_coalesce()
-  -- var x = runConfigSingle({'op': 'coalesce', 'values': [null]});
-  --   expect(x).toEqual(null);
-  --
-  --   x = runConfigSingle({'op': 'coalesce', 'values': [null, 42, null]});
-  --   expect(x).toEqual(42);
-  --
-  --   x = runConfigSingle({'op': 'coalesce', 'values': [null, null, 43]});
-  --   expect(x).toEqual(43);
+
+function TestCoreOps:test_work_with_coalesce()
+  local x = runConfigSingle({['op'] = 'coalesce', ['values'] = {nil}})
+  assert(x == nil)
+
+  x = runConfigSingle({['op'] = 'coalesce', ['values'] = {nil, 42, nil}})
+  assert(x == 42)
+
+  x = runConfigSingle({['op'] = 'coalesce', ['values'] = {nil, nil, 43}})
+  assert(x == 43)
 end
 
-function work_with_length()
+function TestCoreOps:test_work_with_length()
+  assert(false)
   -- var arr = [0, 1, 2, 3, 4, 5];
   -- var length_test = runConfigSingle({'op': 'length', 'value': arr});
   -- expect(length_test).toEqual(arr.length);
@@ -124,7 +128,8 @@ function work_with_length()
   -- expect(length_test).toEqual(arr.length);
 end
 
-function work_with_not()
+function TestCoreOps:test_work_with_not()
+  assert(false)
   -- var x = runConfigSingle({'op': 'not', 'value': 0})
   -- expect(x).toBe(true);
   --
@@ -138,7 +143,8 @@ function work_with_not()
   -- expect(x).toBe(false);
 end
 
-function work_with_or()
+function TestCoreOps:test_work_with_or()
+  assert(false)
   -- var x = runConfigSingle({
   --         'op': 'or',
   --         'values': [0, 0, 0]})
@@ -155,7 +161,8 @@ function work_with_or()
   -- expect(x).toBe(true);
 end
 
-function work_with_and
+function TestCoreOps:test_work_with_and()
+  assert(false)
  --  var x = runConfigSingle({
  --          'op': 'and',
  --          'values': [1, 1, 0]})
@@ -172,7 +179,8 @@ function work_with_and
  --  expect(x).toBe(true);
 end
 
- function work_with_commutative_ops()
+ function TestCoreOps:test_work_with_commutative_ops()
+   assert(false)
   --  var arr = [33, 7, 18, 21, -3];
   --
   -- var minTest = runConfigSingle({'op': 'min', 'values': arr});
@@ -188,7 +196,8 @@ end
   -- expect(productTest).toEqual(-261954);
 end
 
-function work_with_binary_ops()
+function TestCoreOps:test_work_with_binary_ops()
+  assert(false)
   -- var eq = runConfigSingle({'op': 'equals', 'left': 1, 'right': 2});
   -- expect(eq).toEqual(1 == 2);
   --
@@ -216,7 +225,8 @@ function work_with_binary_ops()
   -- expect(div).toEqual(0.75);
 end
 
-function work_with_map()
+function TestCoreOps:test_work_with_map()
+  assert(false)
   -- let mapVal = {'a': 2, 'b': 'c', 'd': false };
   -- let mapOp = runConfigSingle({'op': 'map', 'a': 2, 'b': 'c', 'd': false});
   -- expect(mapOp).toEqual(mapVal);
@@ -226,7 +236,8 @@ function work_with_map()
   -- expect(emptyMap).toEqual(mapOp2);
 end
 
-function work_with_return()
+function TestCoreOps:test_work_with_return()
+  assert(false)
   -- var returnRunner = function(return_value) {
   --   var config = {
   --       "op": "seq",
@@ -266,3 +277,6 @@ function work_with_return()
   -- expect(i.getParams()).toEqual({ 'x': 2});
   -- expect(i.inExperiment()).toEqual(false);
 end
+
+local lu = LuaUnit.new()
+os.exit( lu:runSuite() )

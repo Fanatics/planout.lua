@@ -42,8 +42,8 @@ end
 
 function PlanOutOp:getArgList(name)
   local cur = self:getArgMixed(name)
-  if type(cur[1]) == "nil" then error("Property '" .. name .. "' is not a list") end
-  return cur
+  for i, val in pairs(cur) do if(type(i) == "number" ) then return cur end end
+  error("Property '" .. name .. "' is not a list")
 end
 
 function PlanOutOp:getArgObject(name)

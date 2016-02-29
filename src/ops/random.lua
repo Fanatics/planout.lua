@@ -40,7 +40,7 @@ function PlanOutOpRandom:getHash(appendedUnit)
   end), ".")
   local hashStr = fullSalt .. "." .. unitStr
   local hash = sha1(hashStr)
-  return tonumber(string.sub(hash, 1, 13), 16)
+  return tonumber(string.sub(hash, 0, 13), 16)
 end
 
 
@@ -92,7 +92,8 @@ UniformChoice = PlanOutOpRandom:new()
 function UniformChoice:simpleExecute()
   local values = self:getArgList('choices')
   if #values == 0 then return {} end
-  local rand_index = self:getHash() % #values
+  local rand_index = math.fmod(self:getHash(), #values) + 1
+  --print(JSON:encode(values) .. ":" .. rand_index .. ":" .. values[rand_index])
   return values[rand_index]
 end
 
@@ -106,7 +107,7 @@ function WeightedChoice:simpleExecute()
 
   local cumSum = 0
   for i, val in weights do cumSum = cumSum + val end
-  local stopVal = self:getUniform(0.0, cumSum)
+  local stopVal = self:getUniform(0.0, cumSum) ----
 end
 
 

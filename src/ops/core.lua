@@ -2,7 +2,7 @@ package.path = package.path .. ";../?.lua"
 require("lib.utils")
 local pretty = require 'pl.pretty'
 
-require("base")
+require("ops.base")
 
 Literal = PlanOutOp:new()
 
@@ -38,8 +38,8 @@ end
 Set = PlanOutOp:new()
 
 function Set:execute(mapper)
-  local variable = this.getArgString('var');
-  local value = this.getArgMixed('value');
+  local variable = self:getArgString('var')
+  local value = self:getArgMixed('value')
 
   if mapper:hasOverride(variable) then return end
 
@@ -68,8 +68,9 @@ Coalesce = PlanOutOp:new()
 
 function Coalesce:execute(mapper)
   local values = self:getArgList('values')
-  for i, val in ipairs(values) do
-    local x = mapper.evaluate(val)
+
+  for i, val in pairs(values) do
+    local x = mapper:evaluate(val)
     if type(x) ~= nil then return x end
   end
   return nil
@@ -95,7 +96,7 @@ function Cond:execute(mapper)
   local list = self:getArgList('cond')
   for i, val in ipairs(list) do
     ifClause = val['if']
-    if mapper.evaluate(ifClause) then return mapper.evaluate(val['then']) end
+    if mapper:evaluate(ifClause) then return mapper:evaluate(val['then']) end
   end
   return nil
 end
@@ -106,7 +107,7 @@ And = PlanOutOp:new()
 function And:execute(mapper)
   local list = self:getArgList('values')
   for i, val in ipairs(list) do
-    if not mapper.evaluate(val) then return false end
+    if not mapper:evaluate(val) then return false end
   end
   return true
 end
@@ -116,7 +117,7 @@ Or = PlanOutOp:new()
 function Or:execute(mapper)
   local list = self:getArgList('values')
   for i, val in ipairs(list) do
-    if  mapper.evaluate(val) then return true end
+    if  mapper:evaluate(val) then return true end
   end
   return false
 end

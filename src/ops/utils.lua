@@ -1,41 +1,46 @@
 package.path = package.path .. ";../?.lua"
-require("core")
+
+local pretty = require 'pl.pretty'
+require("ops.base")
+require("ops.core")
+require("ops.random")
+
 
 local operators = {
-    'literal' = Literal,
-    'get' = Get,
-    'set' = Set,
-    'seq' = Seq,
-    'return' = Return,
-    'index' = Index,
-    'array' = Arr,
-    'equals' = Equals,
-    'and' = And,
-    'or' = Or,
-    ">" = GreaterThan,
-    "<" = LessThan,
-    ">=" = GreaterThanOrEqualTo,
-    "<=" = LessThanOrEqualTo,
-    "%" = Mod,
-    "/" = Divide,
-    "not" = Not,
-    "round" = Round,
-    "negative" = Negative,
-    "min" = Min,
-    "max" = Max,
-    "length" = Length,
-    "coalesce" = Coalesce,
-    "map" = Map,
-    "cond" = Cond,
-    "product" = Product,
-    "sum" = Sum,
-    "randomFloat" = RandomFloat,
-    "randomInteger" = RandomInteger,
-    "bernoulliTrial" = BernoulliTrial,
-    "bernoulliFilter" = BernoulliFilter,
-    "uniformChoice" = UniformChoice,
-    "weightedChoice" = WeightedChoice,
-    "sample" = Sample
+    ['literal'] = Literal,
+    ['get'] = Get,
+    ['set'] = Set,
+    ['seq'] = Seq,
+    ['return'] = Return,
+    ['index'] = Index,
+    ['array'] = Arr,
+    ['equals'] = Equals,
+    ['and'] = And,
+    ['or'] = Or,
+    ['>'] = GreaterThan,
+    ['<'] = LessThan,
+    ['>='] = GreaterThanOrEqualTo,
+    ['<='] = LessThanOrEqualTo,
+    ['%'] = Mod,
+    ['/'] = Divide,
+    ['not'] = Not,
+    ['round'] = Round,
+    ['negative'] = Negative,
+    ['min'] = Min,
+    ['max'] = Max,
+    ['length'] = Length,
+    ['coalesce'] = Coalesce,
+    ['map'] = Map,
+    ['cond'] = Cond,
+    ['product'] = Product,
+    ['sum'] = Sum,
+    ['randomFloat'] = RandomFloat,
+    ['randomInteger'] = RandomInteger,
+    ['bernoulliTrial'] = BernoulliTrial,
+    ['bernoulliFilter'] = BernoulliFilter,
+    ['uniformChoice'] = UniformChoice,
+    ['weightedChoice'] = WeightedChoice,
+    ['sample'] = Sample
   }
 
 function operatorInstance(params)

@@ -13,7 +13,7 @@ function StopPlanOutException:new(inExperiment)
 end
 
 function isOperator(op)
-  return type(op) == "table" and type(op.op) ~= "nil"
+  return type(op) == "table" and op.op ~= nil
 end
 
 function map(obj, func, context)

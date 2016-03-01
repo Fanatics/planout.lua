@@ -47,13 +47,9 @@ function Set:execute(mapper)
 
   if mapper:hasOverride(variable) then return end
 
-  if isOperator(value) and type(value.salt) == nil then
-    value.salt = variable;
-  end
+  if isOperator(value) and value.salt == nil then value.salt = variable end
 
-  if variable == "experimentSalt" then
-    mapper.experimentSalt = value;
-  end
+  if variable == "experimentSalt" then mapper.experimentSalt = value end
 
   mapper:set(variable, mapper:evaluate(value));
 end

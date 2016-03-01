@@ -1,6 +1,7 @@
 package.path = package.path .. ";../src/?.lua;"
 require("ops.random")
 local Experiment = require "experiment"
+local Interpreter = require "interpreter"
 
 local pretty = require 'pl.pretty'
 
@@ -135,32 +136,34 @@ function TestExperiment:test_can_pull_experiment_parameters()
 end
 
 function TestExperiment:test_work_with_interpreted_experiments()
-  -- class TestInterpretedExperiment extends BaseExperiment {
-  --   assign(params, args) {
-  --     var compiled =
-  --       {"op":"seq",
-  --        "seq": [
-  --         {"op":"set",
-  --          "var":"foo",
-  --          "value":{
-  --            "choices":["a","b"],
-  --            "op":"uniformChoice",
-  --            "unit": {"op": "get", "var": "i"}
-  --            }
-  --         },
-  --         {"op":"set",
-  --          "var":"bar",
-  --          "value": 41
-  --         }
-  --       ]};
-  --     var proc = new Interpreter(compiled, this.getSalt(), args, params);
-  --     var par = proc.getParams();
-  --     Object.keys(par).forEach(function(param) {
-  --       params.set(param, par[param]);
-  --     });
-  --   }
-  -- };
-  -- experimentTester(TestInterpretedExperiment);
+  local TestInterpretedExperiment = BaseExperiment:new()
+
+  function TestInterpretedExperiment:assign(params, args)
+    local compiled = {
+      ['op'] = 'seq',
+      ['seq'] = {
+        {
+          ['op'] = 'set',
+          ['var'] = 'foo',
+          ['value'] = {
+            ['choices'] = {'a','b'},
+            ['op'] = 'uniformChoice',
+            ['unit'] = {['op'] = 'get', ['var'] = 'i'}
+          }
+        },
+        {
+          ['op'] = 'set',
+          ['var'] = 'bar',
+          ['value'] = 41
+        }
+      }
+    }
+    local proc = Interpreter:new(compiled, self:getSalt(), args, params)
+    local par = proc:getParams()
+    for k, v in pairs(par) do params:set(k, v) end
+  end
+
+  experimentTester(TestInterpretedExperiment, true)
 end
 
 function TestExperiment:test_not_log_exposure_if_parameter_not_in_experiment()

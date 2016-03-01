@@ -37,7 +37,9 @@ function Experiment:getDefaultParamNames()
       table.insert(me.__defaultParams, key)
     end
     self.__defaultParams = {}
-    self:assign(Capture, {})
+    local res, err = pcall(function()
+      me.assign({}, Capture, {})
+    end)
   end
   return self.__defaultParams
 end

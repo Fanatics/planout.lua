@@ -167,15 +167,16 @@ function TestExperiment:test_work_with_interpreted_experiments()
 end
 
 function TestExperiment:test_not_log_exposure_if_parameter_not_in_experiment()
-  -- class TestVanillaExperiment extends BaseExperiment {
-  --   assign(params, args) {
-  --     params.set('foo', new UniformChoice({'choices': ['a', 'b'], 'unit': args.i}));
-  --   }
-  -- }
-  -- globalLog = [];
-  -- var e = new TestVanillaExperiment({ 'i': 42});
-  -- e.get('fobz');
-  -- expect(globalLog.length).toEqual(0);
+  local TestVanillaExperiment = BaseExperiment:new()
+
+  function TestVanillaExperiment:assign(params, args)
+    params:set('foo', UniformChoice:new({['choices'] = {'a','b'}, ['unit'] = args['i']}))
+    return false
+  end
+
+  local e = TestVanillaExperiment:new({['i'] = 42})
+  e:get('fobz')
+  assert(e:getLogLength() == 0)
 end
 
 

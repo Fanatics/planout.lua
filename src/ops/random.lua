@@ -15,7 +15,7 @@ end
 
 function PlanOutOpRandom:getUnit(appendedUnit)
   local unit = self:getArgMixed('unit')
-  if unit[1] == nil then unit = {unit} end
+  if type(unit) ~= "table" or unit[1] == nil then unit = {unit} end
   if appendedUnit ~= nil then table.insert(unit, appendedUnit) end
   return unit
 end

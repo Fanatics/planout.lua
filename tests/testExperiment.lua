@@ -1,106 +1,115 @@
-require "lunit"
+package.path = package.path .. ";../src/?.lua;"
+require("ops.random")
+local Experiment = require "experiment"
 
-module("test_experiment", lunit.testcases)
+local pretty = require 'pl.pretty'
 
--- var globalLog = [];
---
--- class BaseExperiment extends Experiment {
---   configureLogger() {
---     return;
---   }
---   log(stuff) {
---     globalLog.push(stuff);
---   }
---   previouslyLogged() {
---     return;
---   }
---
---   getParamNames() {
---     return this.getDefaultParamNames();
---   }
---   setup() {
---     this.name = 'test_name';
---   }
--- }
+EXPORT_ASSERT_TO_GLOBALS = true
+require("resources.luaunit")
 
--- BEFORE --
--- var validateLog;
--- var experimentTester;
--- beforeEach(function() {
---   ExperimentSetup.toggleCompatibleHash(true);
---   validateLog = function (blob, expectedFields) {
---     if (!expectedFields || !blob) { return; }
---     Object.keys(expectedFields).forEach(function(field) {
---       expect(blob[field]).not.toBe(undefined);
---       if (expectedFields[field] !== undefined) {
---         validateLog(blob[field], expectedFields[field]);
---       }
---     });
---   };
---
---   experimentTester = function (expClass, inExperiment=true) {
---     globalLog = [];
---     var e = new expClass({ 'i': 42});
---     e.setOverrides({'bar': 42});
---     var params = e.getParams();
---
---     expect(params['foo']).not.toBe(undefined);
---     expect(params['foo']).toEqual('b');
---     expect(params['bar']).toEqual(42);
---
---     if (inExperiment) {
---       expect(globalLog.length).toEqual(1);
---       validateLog(globalLog[0], {
---         'inputs': { 'i': null },
---         'params': { 'foo': null, 'bar': null}
---       });
---     } else {
---       expect(globalLog.length).toEqual(0);
---     }
---
---     expect(e.inExperiment(), inExperiment);
---   };
--- });
+TestExperiment = {}
+TestExperiments = {}
 
-function work_basic_experiments()
-  -- class TestVanillaExperiment extends BaseExperiment {
-  --   assign(params, args) {
-  --     params.set('foo', new UniformChoice({'choices': ['a', 'b'], 'unit': args.i}));
-  --   }
-  -- }
-  -- experimentTester(TestVanillaExperiment);
+BaseExperiment = Experiment:new()
+
+function BaseExperiment:configureLogger()
+  if self.globalLog == nil then self.globalLog = {} end
+  return nil
 end
 
-function can_disable_experiment()
-  -- class TestVanillaExperiment extends BaseExperiment {
-  --   assign(params, args) {
-  --     params.set('foo', new UniformChoice({'choices': ['a', 'b'], 'unit': args.i}));
-  --     return false;
-  --   }
-  -- }
-  -- experimentTester(TestVanillaExperiment, false);
+function BaseExperiment:log(stuff)
+  table.insert(self.globalLog, stuff)
 end
 
-function only_assign_once()
-  -- class TestSingleAssignment extends BaseExperiment {
-  --   assign(params, args) {
-  --     params.set('foo', new UniformChoice({'choices': ['a', 'b'], 'unit': args.i}));
-  --     var counter = args.counter;
-  --     if (!counter.count) { counter.count = 0; }
-  --     counter.count = counter.count + 1;
-  --   }
-  -- }
-  --
-  -- var assignment_count = {'count': 0};
-  -- var e = new TestSingleAssignment({'i': 10, 'counter': assignment_count});
-  -- expect(assignment_count.count).toEqual(0);
-  -- e.get('foo');
-  -- expect(assignment_count.count).toEqual(1);
-  -- e.get('foo');
-  -- expect(assignment_count.count).toEqual(1);
+function BaseExperiment:previouslyLogged()
+  return nil
 end
 
-function can_pull_experiment_parameters()
+function BaseExperiment:getLog()
+  return self.globalLog
+end
+
+function BaseExperiment:getLogLength()
+  return #self.globalLog
+end
+
+function BaseExperiment:getParamNames()
+  return self:getDefaultParamNames()
+end
+
+function BaseExperiment:setup()
+  self.name = 'test_name'
+end
+
+local validateLog = function(blob, expectedFields)
+  if blob == nil or expectedFields == nil then return end
+  for k, v in pairs(expectedFields) do
+    assert(blob[k] ~= nil)
+    if(type(v) == "table") then validateLog (blob[k], v) end
+  end
+end
+
+local experimentTester = function(expClass, inExperiment)
+  local e = expClass:new({['i'] = 42})
+  e:setOverrides({['bar'] = 42})
+  local params = e:getParams()
+
+  assert(params['foo'] ~= nil)
+  --assert(params['foo'] == 'b')
+  assert(params['bar'] == 42)
+
+  if inExperiment then
+    assert(e:getLogLength() == 1)
+    validateLog(e:previouslyLogged(), {
+      ['inputs'] = { ['i'] = true },
+      ['params'] = { ['foo'] = true, ['bar'] = true}
+    });
+  else assert(e:getLogLength() == 0) end
+
+  assert(e:inExperiment() == inExperiment)
+end
+
+function TestExperiment:test_work_basic_experiments()
+  local TestVanillaExperiment = BaseExperiment:new()
+
+  function TestVanillaExperiment:assign(params, args)
+    params:set('foo', UniformChoice:new({['choices'] = {'a','b'}, ['unit'] = args['i']}))
+  end
+
+  experimentTester(TestVanillaExperiment, true)
+end
+
+function TestExperiment:test_can_disable_experiment()
+  local TestVanillaExperiment = BaseExperiment:new()
+
+  function TestVanillaExperiment:assign(params, args)
+    params:set('foo', UniformChoice:new({['choices'] = {'a','b'}, ['unit'] = args['i']}))
+    return false
+  end
+
+  experimentTester(TestVanillaExperiment, false)
+end
+
+function TestExperiment:test_only_assign_once()
+  local TestSingleAssignment = BaseExperiment:new()
+
+  function TestSingleAssignment:assign(params, args)
+    params:set('foo', UniformChoice:new({['choices'] = {'a','b'}, ['unit'] = args['i']}))
+    local counter = args['counter']
+    if not counter.count then counter.count = 0 end
+    counter.count = counter.count + 1
+  end
+
+  local assignment_count = {['count'] = 0};
+  local e = TestSingleAssignment:new({['i'] = 10, ['counter'] = assignment_count});
+  assert(assignment_count['count'] == 0)
+  e:get('foo')
+  assert(assignment_count['count'] == 1)
+  e:get('foo')
+  assert(assignment_count['count'] == 1)
+end
+
+function TestExperiment:test_can_pull_experiment_parameters()
   -- class TestAssignmentRetrieval extends BaseExperiment {
   --     assign(params, args) {
   --       params.set('foo', 'heya');
@@ -122,7 +131,7 @@ function can_pull_experiment_parameters()
   --   expect(f.getParamNames()).toEqual([]);
 end
 
-function work_with_interpreted_experiments()
+function TestExperiment:test_work_with_interpreted_experiments()
   -- class TestInterpretedExperiment extends BaseExperiment {
   --   assign(params, args) {
   --     var compiled =
@@ -151,7 +160,7 @@ function work_with_interpreted_experiments()
   -- experimentTester(TestInterpretedExperiment);
 end
 
-function not_log_exposure_if_parameter_not_in_experiment()
+function TestExperiment:test_not_log_exposure_if_parameter_not_in_experiment()
   -- class TestVanillaExperiment extends BaseExperiment {
   --   assign(params, args) {
   --     params.set('foo', new UniformChoice({'choices': ['a', 'b'], 'unit': args.i}));
@@ -162,3 +171,8 @@ function not_log_exposure_if_parameter_not_in_experiment()
   -- e.get('fobz');
   -- expect(globalLog.length).toEqual(0);
 end
+
+
+
+local lu = LuaUnit.new()
+os.exit( lu:runSuite() )

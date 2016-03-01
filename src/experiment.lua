@@ -2,6 +2,7 @@ require("lib.utils")
 local JSON = require "lib.JSON"
 local Assignment = require "assignment"
 
+local pretty = require 'pl.pretty'
 local Experiment = {}
 
 function Experiment:new(inputs)
@@ -43,7 +44,7 @@ end
 function Experiment:_assign()
   self:configureLogger()
   local assigneVal = self:assign(self.assignment, self.inputs)
-  self._inExperiment = assigneVal ~= nil
+  self._inExperiment = assigneVal == nil or assigneVal ~= false
   self.assigned = true
 end
 
@@ -121,7 +122,7 @@ end
 function Experiment:get(name, def)
   self:requireAssignment()
   self:requireExposureLogging(name)
-  return self._assignment:get(name, def)
+  return self.assignment:get(name, def)
 end
 
 function Experiment:toString()
@@ -134,6 +135,11 @@ function Experiment:logExposure(extras)
   if not self:inExperiment() then return end
   self.exposureLogged = true
   self:logEvent('exposure', extras)
+end
+
+function Experiment:shouldLogExposure(paramName)
+  if paramName ~= nil and not (self:shouldFetchExperimentParameter(paramName) ~= nil) then return false end
+  return self.autoExposureLogging and not (self:previouslyLogged() ~= nil)
 end
 
 function Experiment:logEvent(eventType, extras)

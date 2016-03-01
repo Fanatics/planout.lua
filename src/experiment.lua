@@ -30,7 +30,16 @@ function Experiment:getDefaultExperimentName()
 end
 
 function Experiment:getDefaultParamNames()
-  return {}
+  if self.__defaultParams == nil then
+    local Capture = {}
+    local me = self
+    function Capture:set(key, val)
+      table.insert(me.__defaultParams, key)
+    end
+    self.__defaultParams = {}
+    self:assign(Capture, {})
+  end
+  return self.__defaultParams
 end
 
 function Experiment:requireAssignment()

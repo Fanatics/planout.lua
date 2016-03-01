@@ -95,9 +95,11 @@ function TestExperiment:test_only_assign_once()
 
   function TestSingleAssignment:assign(params, args)
     params:set('foo', UniformChoice:new({['choices'] = {'a','b'}, ['unit'] = args['i']}))
-    local counter = args['counter']
-    if not counter.count then counter.count = 0 end
-    counter.count = counter.count + 1
+    if args['counter'] ~= nil then
+      local counter = args['counter']
+      if not counter.count then counter.count = 0 end
+      counter.count = counter.count + 1
+    end
   end
 
   local assignment_count = {['count'] = 0};
@@ -110,25 +112,26 @@ function TestExperiment:test_only_assign_once()
 end
 
 function TestExperiment:test_can_pull_experiment_parameters()
-  -- class TestAssignmentRetrieval extends BaseExperiment {
-  --     assign(params, args) {
-  --       params.set('foo', 'heya');
-  --       if (false) {
-  --         params.set('boo', 'hey');
-  --       }
-  --     }
-  --   }
-  --
-  --   class TestAssignmentRetrieval2 extends BaseExperiment {
-  --     assign(params, args) {
-  --       return;
-  --     }
-  --   }
-  --
-  --   var e = new TestAssignmentRetrieval();
-  --   expect(e.getParamNames()).toEqual(['foo', 'boo']);
-  --   var f = new TestAssignmentRetrieval2();
-  --   expect(f.getParamNames()).toEqual([]);
+  local TestAssignmentRetrieval = BaseExperiment:new()
+
+  function TestAssignmentRetrieval:assign(params, args)
+    params:set('foo', 'heya')
+    params:set('boo', 'yeah')
+  end
+
+  local TestAssignmentRetrieval2 = BaseExperiment:new()
+
+  function TestAssignmentRetrieval2:assign(params, args)
+    return nil
+  end
+
+  local e = TestAssignmentRetrieval:new()
+  local params = e:getParamNames()
+  assert(#params == 2)
+  assert(table.indexOf(params, 'foo') == 1)
+  assert(table.indexOf(params, 'boo') == 2)
+  local f = TestAssignmentRetrieval2:new()
+  assert(#f:getParamNames() == 0)
 end
 
 function TestExperiment:test_work_with_interpreted_experiments()

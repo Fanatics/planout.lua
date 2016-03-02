@@ -96,7 +96,8 @@ function Cond:execute(mapper)
   local list = self:getArgList('cond')
   for i, val in ipairs(list) do
     ifClause = val['if']
-    if mapper:evaluate(ifClause) then return mapper:evaluate(val['then']) end
+    local eval = mapper:evaluate(ifClause)
+    if eval and eval ~= 0 then return mapper:evaluate(val['then']) end
   end
   return nil
 end

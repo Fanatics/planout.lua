@@ -9,7 +9,7 @@ EXPORT_ASSERT_TO_GLOBALS = true
 require("resources.luaunit")
 
 TestExperiment = {}
-TestExperiments = {}
+
 
 BaseExperiment = Experiment:new()
 

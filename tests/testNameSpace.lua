@@ -1,219 +1,228 @@
-require "lunit"
+package.path = package.path .. ';../src/?.lua;'
 
-module("test_namespace", lunit.testcases)
+local Experiment = require "experiment"
+local pretty = require 'pl.pretty'
 
--- class BaseExperiment extends Experiment {
---   configureLogger() {
---     return;
---   }
---
---   log(stuff) {
---     globalLog.push(stuff);
---   }
---
---   previouslyLogged() {
---     return;
---   }
---
---   getParamNames() {
---     return this.getDefaultParamNames();
---   }
---   setup() {
---     this.name = 'test_name';
---   }
--- };
---
--- var globalLog = [];
--- class Experiment1 extends BaseExperiment {
---   assign(params, args) {
---     params.set('test', 1)
---   }
--- }
---
--- class Experiment2 extends BaseExperiment {
---
---   assign(params, args) {
---     params.set('test', 2)
---   }
--- }
---
--- class Experiment3 extends BaseExperiment {
---   assign(params, args) {
---     params.set("test2", 3)
---   }
--- }
---
--- class BaseTestNamespace extends Namespace.SimpleNamespace {
---   setup() {
---     this.setName('test');
---     this.setPrimaryUnit('userid');
---   }
---
---   setupDefaults() {
---     this.numSegments = 100;
---   }
--- };
--- BEFORE --
--- var validateLog;
--- var validateSegments;
--- beforeEach(function() {
---   ExperimentSetup.toggleCompatibleHash(true);
---   validateLog = function(exp) {
---     expect(globalLog[0].salt).toEqual(`test-${exp}`)
---   }
---
---   validateSegments = function(namespace, segmentBreakdown) {
---     var segments = Object.keys(namespace.segmentAllocations);
---     var segCounts = {};
---     for (var i = 0; i < segments.length; i++) {
---       var seg = namespace.segmentAllocations[segments[i]];
---       if (!segCounts[seg]) {
---         segCounts[seg] = 1;
---       } else {
---         segCounts[seg] += 1;
---       }
---     }
---     expect(segCounts).toEqual(segmentBreakdown);
---   }
--- });
+require("namespace")
 
--- AFTER --
--- afterEach(function() {
---   globalLog = [];
--- });
+EXPORT_ASSERT_TO_GLOBALS = true
+require('resources.luaunit')
 
-function adds_segment()
-  -- class TestNamespace extends BaseTestNamespace {
-  --   setupExperiments() {
-  --     this.addExperiment('Experiment1', Experiment1, 100);
-  --   }
-  -- };
-  -- var namespace = new TestNamespace({'userid': 'blah'});
-  -- expect(namespace.get('test')).toEqual(1);
-  -- expect(namespace.availableSegments.length).toEqual(0);
-  -- expect(Object.keys(namespace.segmentAllocations).length).toEqual(100);
-  -- validateLog("Experiment1");
-  -- validateSegments(namespace, { Experiment1: 100 });
+TestNamespace = {}
+TestNamespaces = {}
+
+BaseExperiment = Experiment:new()
+
+function BaseExperiment:configureLogger()
+  if self.globalLog == nil then self.globalLog = {} end
+  return nil
 end
 
-function adds_2_segements()
-  -- class TestNamespace extends BaseTestNamespace {
-  --   setupExperiments() {
-  --     this.addExperiment('Experiment1', Experiment1, 50);
-  --     this.addExperiment('Experiment2', Experiment2, 50);
-  --   }
-  -- };
-  --
-  -- var namespace = new TestNamespace({'userid': 'blah'});
-  -- expect(namespace.get('test')).toEqual(1);
-  -- validateLog("Experiment1");
-  -- globalLog = [];
-  -- var namespace2 = new TestNamespace({'userid': 'abb'});
-  -- expect(namespace2.get('test')).toEqual(2);
-  -- validateLog("Experiment2");
-  -- var segValidation = { Experiment1: 50, Experiment2: 50};
-  -- validateSegments(namespace, segValidation);
+function BaseExperiment:log(stuff)
+  table.insert(self.globalLog, stuff)
 end
 
-function removes_segment()
-  -- class TestNamespace extends BaseTestNamespace {
-  --   setupDefaults() {
-  --     this.numSegments = 10;
-  --   }
-  --
-  --   setupExperiments() {
-  --     this.addExperiment('Experiment1', Experiment1, 10);
-  --     this.removeExperiment('Experiment1');
-  --     this.addExperiment('Experiment2', Experiment2, 10);
-  --   }
-  -- };
-  --
-  -- var str = "bla";
-  -- for(var i = 0; i < 100; i++) {
-  --   str += "h";
-  --   var namespace = new TestNamespace({'userid': str});
-  --   expect(namespace.get('test')).toEqual(2);
-  --   validateLog("Experiment2");
-  -- }
-  -- var namespace = new TestNamespace({'userid': str});
-  -- validateSegments(namespace, { Experiment2: 10 });
+function BaseExperiment:previouslyLogged()
+  return nil
 end
 
-function expose_only_when_potential_member()
-  -- class TestNamespace extends BaseTestNamespace {
-  --   setupDefaults() {
-  --     this.numSegments = 10;
-  --   }
-  --
-  --   setupExperiments() {
-  --     this.addExperiment('Experiment1', Experiment1, 5);
-  --     this.addExperiment('Experiment3', Experiment3, 5);
-  --   }
-  -- }
-  --
-  -- var namespace = new TestNamespace({'userid': 'hi'});
-  -- expect(namespace.get('test2')).toEqual(null);
-  -- expect(globalLog.length).toEqual(0);
-  -- expect(namespace.get('test'));
-  -- validateLog("Experiment1");
+function BaseExperiment:getLog()
+  return self.globalLog
 end
 
-function can_override_namespace()
-  -- class TestNamespace extends BaseTestNamespace {
-  --   setupExperiments() {
-  --     this.addExperiment('Experiment1', Experiment1, 50);
-  --     this.addExperiment('Experiment3', Experiment3, 50);
-  --   }
-  --
-  --   allowedOverride() {
-  --     return true;
-  --   }
-  --
-  --   getOverrides() {
-  --     return {
-  --       'test': {
-  --         'experimentName': 'Experiment1',
-  --         'value': 'overridden'
-  --       },
-  --       'test2': {
-  --         'experimentName': 'Experiment3',
-  --         'value': 'overridden2'
-  --       }
-  --     };
-  --   }
-  -- }
-  --
-  -- var namespace = new TestNamespace({'userid': 'hi'});
-  -- expect(namespace.get('test')).toEqual('overridden');
-  -- validateLog('Experiment1');
-  -- globalLog = [];
-  -- expect(namespace.get('test2')).toEqual('overridden2');
-  -- validateLog('Experiment3');
+function BaseExperiment:getLogLength()
+  return #self.globalLog
 end
 
-function respects_auto_exposer_logging_turned_off
-  -- class ExperimentNoExposure extends BaseExperiment {
-  --   setup() {
-  --     this.setAutoExposureLogging(false);
-  --     this.name = 'test_name';
-  --   }
-  --
-  --   assign(params, args) {
-  --     params.set('test', 1)
-  --   }
-  -- };
-  -- class TestNamespace extends BaseTestNamespace {
-  --   setupExperiments() {
-  --     this.addExperiment('ExperimentNoExposure', ExperimentNoExposure, 100);
-  --   }
-  -- };
-  --
-  -- var namespace = new TestNamespace({'userid': 'hi'});
-  -- namespace.get('test');
-  -- expect(globalLog.length).toEqual(0);
+function BaseExperiment:getParamNames()
+  return self:getDefaultParamNames()
 end
 
-function works_with_dynamic_get_parameter_names
+function BaseExperiment:setup()
+  self.name = 'test_name'
+end
+
+
+Experiment1 = BaseExperiment:new()
+
+function Experiment1:assign(params, args)
+  params:set('test', 1)
+end
+
+
+Experiment2 = BaseExperiment:new()
+
+function Experiment2:assign(params, args)
+  params:set('test', 2)
+end
+
+
+Experiment3 = BaseExperiment:new()
+
+function Experiment3:assign(params, args)
+  params:set('test', 3)
+end
+
+
+BaseTestNamespace = SimpleNamespace:new()
+
+function BaseTestNamespace:setup()
+  self:setName('test')
+  self:setPrimaryUnit('userid')
+end
+
+function BaseTestNamespace:setupDefaults()
+  self.numSegments = 100
+end
+
+function BaseTestNamespace:getLog()
+  return self._experiment:getLog()
+end
+
+function BaseTestNamespace:clearLog()
+  self._experiment.globalLog = {}
+end
+
+
+local validateLog = function(exp, globalLog)
+  assert(globalLog[1].salt == 'test-' .. exp)
+end
+
+local validateSegments = function(namespace, segmentBreakdown)
+  local segCounts = {}
+  for segName, seg in ipairs(namespace.segmentAllocations) do
+    if segCounts[seg] == nil then segCounts[seg] = 0 end
+    segCounts[seg] = segCounts[seg] + 1
+  end
+  for segName, segCount in pairs(segCounts) do
+    assert(segCount == segmentBreakdown[segName])
+  end
+end
+
+function TestNamespace:test_adds_segment()
+  local TestNamespace = BaseTestNamespace:new()
+  function TestNamespace:setupExperiments()
+    self:addExperiment('Experiment1', Experiment1, 100)
+  end
+
+  local ns = TestNamespace:new({['userid'] = 'blah'})
+  assert(ns:get('test') == 1)
+  assert(#ns.availableSegments == 0)
+  assert(#ns.segmentAllocations == 100)
+  validateLog("Experiment1", ns:getLog())
+  validateSegments(ns, { ['Experiment1'] = 100 })
+end
+
+function TestNamespace:test_adds_2_segements()
+  local TestNamespace = BaseTestNamespace:new()
+  function TestNamespace:setupExperiments()
+    self:addExperiment('Experiment1', Experiment1, 50)
+    self:addExperiment('Experiment2', Experiment2, 50)
+  end
+
+  local ns = TestNamespace:new({['userid'] = 'blah'})
+  assert(ns:get('test') == 1)
+  validateLog("Experiment1", ns:getLog())
+
+  local ns2 = TestNamespace:new({['userid'] = 'abb'})
+  assert(ns2:get('test') == 2)
+  validateLog("Experiment2", ns2:getLog())
+
+  validateSegments(ns, { ['Experiment1'] = 50, ['Experiment2'] = 50 })
+end
+
+function TestNamespace:test_removes_segment()
+  local TestNamespace = BaseTestNamespace:new()
+  function TestNamespace:setupDefaults()
+    self.numSegments = 10
+  end
+  function TestNamespace:setupExperiments()
+    self:addExperiment('Experiment1', Experiment1, 10)
+    self:removeExperiment('Experiment1')
+    self:addExperiment('Experiment2', Experiment2, 10)
+  end
+
+  local ns
+  local str = 'bla'
+  local count = 0
+  while count < 100 do
+    str = str .. 'h'
+    ns = TestNamespace:new({['userid'] = str})
+    assert(ns:get('test') == 2)
+    validateLog("Experiment2", ns:getLog())
+    count = count + 1
+  end
+
+  local ns2 = TestNamespace:new({['userid'] = str})
+  assert(ns2:get('test') == 2)
+  validateSegments(ns2, { ['Experiment2'] = 10 })
+end
+
+function TestNamespace:test_expose_only_when_potential_member()
+  local TestNamespace = BaseTestNamespace:new()
+  function TestNamespace:setupDefaults()
+    self.numSegments = 10
+  end
+  function TestNamespace:setupExperiments()
+    self:addExperiment('Experiment1', Experiment1, 5)
+    self:addExperiment('Experiment3', Experiment3, 5)
+  end
+
+  local ns = TestNamespace:new({['userid'] = 'hi'})
+  assert(ns:get("test2") == nil)
+  assert(#ns:getLog() == 0)
+  assert(ns:get("test") ~= nil)
+  validateLog("Experiment1", ns:getLog())
+end
+
+function TestNamespace:test_can_override_namespace()
+  local TestNamespace = BaseTestNamespace:new()
+  function TestNamespace:setupExperiments()
+    self:addExperiment('Experiment1', Experiment1, 50)
+    self:addExperiment('Experiment2', Experiment2, 50)
+  end
+  function TestNamespace:allowedOverride() return true end
+  function TestNamespace:getOverrides()
+    return {
+      ['test'] = {
+        ['experimentName'] = 'Experiment1',
+        ['value'] = 'overridden'
+      },
+      ['test2'] = {
+        ['experimentName'] = 'Experiment3',
+        ['value'] = 'overridden2'
+      }
+    }
+  end
+  local ns = TestNamespace:new({['userid'] = 'hi'})
+  assert(ns:get('test') == 'overridden')
+  validateLog("Experiment1", ns:getLog())
+  ns:clearLog()
+  assert(ns:get('test') == 'overridden')
+  validateLog("Experiment1", ns:getLog())
+end
+
+function TestNamespaces:test_respects_auto_exposer_logging_turned_off()
+  local ExperimentNoExposure = BaseExperiment:new()
+  function ExperimentNoExposure:assign(params, args)
+    params:set('test', 1)
+  end
+  function ExperimentNoExposure:setup()
+    self:setAutoExposureLogging(false)
+    self.name = 'test_name'
+  end
+
+  local TestNamespace = BaseTestNamespace:new()
+  function TestNamespace:setupExperiments()
+    self:addExperiment('ExperimentNoExposure', ExperimentNoExposure, 100)
+  end
+
+  local ns = TestNamespace:new({['userid'] = 'hi'})
+  ns:get("test")
+  assert(#ns:getLog() == 0)
+end
+
+function TestNamespace:test_works_with_dynamic_get_parameter_names()
   -- class ExperimentParamTest extends Experiment1 {
   --
   --   assign(params, args) {
@@ -241,7 +250,7 @@ function works_with_dynamic_get_parameter_names
   -- expect(globalLog.length).toEqual(1);
 end
 
-function works_with_get_params()
+function TestNamespace:test_works_with_get_params()
   -- class SimpleExperiment extends BaseExperiment {
   --   assign(params, args) {
   --     params.set('test', 1)
@@ -266,7 +275,7 @@ function works_with_get_params()
   -- expect(params).toEqual({'test': 1});
 end
 
-function not_log_exposure_if_parameter_not_in_experiment()
+function TestNamespace:test_not_log_exposure_if_parameter_not_in_experiment()
   -- class SimpleExperiment extends BaseExperiment {
   --   assign(params, args) {
   --     params.set('test', 1)
@@ -284,7 +293,7 @@ function not_log_exposure_if_parameter_not_in_experiment()
   -- expect(globalLog.length).toEqual(1);
 end
 
-function works_with_experiment_setup()
+function TestNamespace:test_works_with_experiment_setup()
   -- class SimpleExperiment extends BaseExperiment {
   --   assign(params, args) {
   --     params.set('test', 1)
@@ -301,7 +310,7 @@ function works_with_experiment_setup()
   -- expect(globalLog.length).toEqual(1);
 end
 
-function works_as_expected()
+function TestNamespace:test_works_as_expected()
   -- class TestNamespaces extends BaseTestNamespace {
   --   setup() {
   --     this.setName('testomg');
@@ -328,3 +337,8 @@ function works_as_expected()
   -- }
   -- expect(count >= 5500 && count <= 6500).toBe(true);
 end
+
+
+
+local lu = LuaUnit.new()
+os.exit( lu:runSuite() )

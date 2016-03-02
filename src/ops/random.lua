@@ -115,8 +115,7 @@ Sample = PlanOutOpRandom:new()
 
 function Sample:sample(array, numDraws)
   local len = #array
-  local stoppingPoint = len - numDraws + 1
-
+  local stoppingPoint = len - numDraws
   for i, val in ipairs(array) do
     local j = self:getHash(i) % i
     local temp = array[i]
@@ -124,10 +123,11 @@ function Sample:sample(array, numDraws)
     array[j] = temp;
 
     if stoppingPoint == i then
-      return table.slice(array, i, len)
+      return table.slice(array, i + 1, len)
     end
   end
-  return table.slice(array, 1, numDraws)
+
+  return table.slice(array, 0, numDraws)
 end
 
 function Sample:simpleExecute()

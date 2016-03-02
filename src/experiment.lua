@@ -100,7 +100,7 @@ end
 
 function Experiment:shouldFetchExperimentParameter(name)
   local experimentalParams = self:getParamNames()
-  return table.indexOf(experimentalParams, name)
+  return table.indexOf(experimentalParams, name) > 0
 end
 
 function Experiment:setName(name)
@@ -111,7 +111,7 @@ end
 
 function Experiment:__asBlob(extras)
   extras = extras or {}
-  return setmetatable(extras, {
+  return table.merge(extras, {
     name = self:getName(),
     time = os.clock(),
     salt = self:getSalt(),
@@ -149,7 +149,7 @@ function Experiment:logExposure(extras)
 end
 
 function Experiment:shouldLogExposure(paramName)
-  if paramName ~= nil and not (self:shouldFetchExperimentParameter(paramName) ~= nil) then return false end
+  if paramName ~= nil and not self:shouldFetchExperimentParameter(paramName) then return false end
   return self.autoExposureLogging and not (self:previouslyLogged() ~= nil)
 end
 

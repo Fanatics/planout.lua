@@ -135,7 +135,7 @@ end
 
 function SimpleNamespace:addExperiment(name, expObject, segments)
   local numberAvailable = #self.availableSegments;
-  --print(numberAvailable)
+
   if numberAvailable < segments or self.currentExperiments[name] ~= nil
   then return false end
 
@@ -171,14 +171,13 @@ end
 
 function SimpleNamespace:getSegment()
   local a = Assignment:new(self.name)
-  if self.numSegments == nil then print(instanceOf(self,SimpleNamespace)) end
   local segment = RandomInteger:new({
-    ['min'] = 1,
-    ['max'] = self.numSegments,
+    ['min'] = 0,
+    ['max'] = self.numSegments - 1,
     ['unit'] = self.inputs[self:getPrimaryUnit()] or ''
   })
   a:set('segment', segment);
-  return a:get('segment');
+  return a:get('segment') + 1;
 end
 
 function SimpleNamespace:getDefaultNamespaceName()
@@ -239,7 +238,7 @@ function SimpleNamespace:setGlobalOverride(name)
   local globalOverrides = self:getOverrides()
   if globalOverrides ~= nil and globalOverrides[name] ~= nil then
     local overrides = globalOverrides[name]
-    if this.currentExperiments[overrides.experimentName] ~= nil then
+    if self.currentExperiments[overrides.experimentName] ~= nil then
       self:_assignExperimentObject(overrides.experimentName)
       self._experiment:addOverride(name, overrides.value)
     end

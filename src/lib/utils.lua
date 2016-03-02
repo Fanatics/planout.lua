@@ -1,3 +1,4 @@
+local pretty = require 'pl.pretty'
 
 function _new_(self, instance)
   instance = instance or {}
@@ -98,6 +99,20 @@ table.indexOf = function( t, object )
 	end
 
 	return -1
+end
+
+table.merge = function(results, ...)
+  local arg={...}
+  for i,v in ipairs(arg) do
+    if type(v) == "table" then
+      for k,vp in pairs(v) do
+        results[k] = shallowcopy(vp)
+      end
+    else
+      table.insert(results, v)
+    end
+  end
+  return results
 end
 
 function range(max)

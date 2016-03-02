@@ -70,13 +70,13 @@ function Namespace:logEvent(eventType, extras)
 end
 
 function Namespace:requireExperiment()
-  if not self._experiment then
+  if self._experiment == nil then
     self:_assignExperiment()
   end
 end
 
 function Namespace:requireDefaultExperiment()
-  if not this._defaultExperiment then
+  if not self._defaultExperiment then
     self:_assignDefaultExperiment()
   end
 end
@@ -85,22 +85,23 @@ end
 SimpleNamespace = Namespace:new()
 
 function SimpleNamespace:init(args)
-  self.name = self:getDefaultNamespaceName()
-  self.inputs = args or {}
-  self.numSegments = 15
-  self.segmentAllocations = range(self.numSegments)
-  self.currentExperiments = {}
+  if args ~= nil then
+    self.name = self:getDefaultNamespaceName()
+    self.inputs = args or {}
+    self.numSegments = 1
+    self.segmentAllocations = {}
+    self.currentExperiments = {}
 
-  self._experiment = nil
-  self._defaultExperiment = nil
-  self.defaultExperimentClass = DefaultExperiment
-  self._inExperiment = false
+    self._experiment = nil
+    self._defaultExperiment = nil
+    self.defaultExperimentClass = DefaultExperiment
+    self._inExperiment = false
 
-  self:setupDefaults();
-  self:setup();
-  self.availableSegments = range(self.numSegments);
-
-  self:setupExperiments();
+    self:setupDefaults();
+    self:setup();
+    self.availableSegments = range(self.numSegments);
+    self:setupExperiments();
+  end
   return self
 end
 
@@ -109,11 +110,11 @@ function SimpleNamespace:setupDefaults()
 end
 
 function SimpleNamespace:setup()
-  --error "setup Not implemented"
+  error "setup Not implemented"
 end
 
 function SimpleNamespace:setupExperiments()
-  --error "setupExperiments Not implemented"
+  error "setupExperiments Not implemented"
 end
 
 function SimpleNamespace:getPrimaryUnit()
@@ -134,7 +135,7 @@ end
 
 function SimpleNamespace:addExperiment(name, expObject, segments)
   local numberAvailable = #self.availableSegments;
-
+  --print(numberAvailable)
   if numberAvailable < segments or self.currentExperiments[name] ~= nil
   then return false end
 
@@ -146,7 +147,6 @@ function SimpleNamespace:addExperiment(name, expObject, segments)
   }))
   local sample = a:get('sampled_segments')
 
-  --for(var i = 0; i < sample.length; i++) {
   for i, v in ipairs(sample) do
     self.segmentAllocations[v] = name
     local currentIndex = table.indexOf(self.availableSegments, v)
@@ -171,10 +171,11 @@ end
 
 function SimpleNamespace:getSegment()
   local a = Assignment:new(self.name)
+  if self.numSegments == nil then print(instanceOf(self,SimpleNamespace)) end
   local segment = RandomInteger:new({
-    ['min'] = 0,
-    ['max'] = self.numSegments - 1,
-    ['unit'] = self.inputs[self:getPrimaryUnit()]
+    ['min'] = 1,
+    ['max'] = self.numSegments,
+    ['unit'] = self.inputs[self:getPrimaryUnit()] or ''
   })
   a:set('segment', segment);
   return a:get('segment');
@@ -185,9 +186,8 @@ function SimpleNamespace:getDefaultNamespaceName()
 end
 
 function SimpleNamespace:_assignExperiment()
-  self.inputs = setmetatable(self.inputs, getExperimentInputs(self:getName()))
+  self.inputs = table.merge(self.inputs or {}, getExperimentInputs(self:getName()))
   local segment = self:getSegment()
-
   if type(self.segmentAllocations[segment]) == "string" then
     self:_assignExperimentObject(self.segmentAllocations[segment])
   end

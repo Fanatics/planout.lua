@@ -252,7 +252,7 @@ function SimpleNamespace:getParams(experimentName)
 end
 
 function SimpleNamespace:getOriginalExperimentName()
-  if self._experiment ~= nil then return self._experiment:getName() end
+  if self._experiment ~= nil then return string.split(self._experiment:getName(), '-')[2] end
   return nil
 end
 

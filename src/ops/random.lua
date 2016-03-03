@@ -106,7 +106,7 @@ function WeightedChoice:simpleExecute()
   if #values == 0 then return {} end
 
   local cumSum = 0
-  for i, val in weights do cumSum = cumSum + val end
+  for i, val in ipairs(weights) do cumSum = cumSum + val end
   local stopVal = self:getUniform(0.0, cumSum) ----
 end
 

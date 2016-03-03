@@ -8,6 +8,7 @@ EXPORT_ASSERT_TO_GLOBALS = true
 require("resources.luaunit")
 
 TestRandomOps = {}
+TestRandomOps2 = {}
 
 local z = 3.29
 
@@ -17,12 +18,12 @@ function assertProp(observedP, expectedP, N)
 end
 
 function sum(obj)
-  return _.map(obj, function(totalSum, cur) return totalSum + cur end)
+  return _.reduce(obj, function(totalSum, cur) return totalSum + cur end)
 end
 
 function valueMassToDensity(valueMass)
-  local values = _.map(valueMass, function(val) return val[1] end)
-  local ns = _.map(valueMass, function(val) return val[val[1]] end)
+  local values = _.map(valueMass, function(val) for k,v in pairs(val) do return k end end)
+  local ns = _.map(valueMass, function(val, i) return val[values[i]] end)
   local ns_sum = sum(ns)
   ns = _.map(ns, function(val) return val / ns_sum end)
   local ret = {}
@@ -35,10 +36,10 @@ end
 function Counter(l)
   local ret = {}
   for k,v in pairs(l) do
-    if ret[k] then
-      ret[k] = ret[k] + 1
+    if ret[k..""] ~= nil then
+      ret[k..""] = ret[k..""] + 1
     else
-      ret[k] = 1
+      ret[k..""] = 1
     end
   end
   return ret
@@ -46,9 +47,8 @@ end
 
 function assertProbs(xs, valueDensity, N)
   local hist = Counter(xs)
-  for k,v in pairs(hist) do
-    print(valueDensity[k])
-    assertProp(hist[k] / N, valueDensity[k], N)
+  for i,v in ipairs(hist) do
+    assertProp(v / N, valueDensity[v..""], N)
   end
 end
 
@@ -73,12 +73,12 @@ function TestRandomOps:test_salts_correctly()
   b:set('x', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i}));
   assert(a:get('x') ~= b:get('x'));
 
-  a:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] ='fs'}))
-  b:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] ='fs'}))
+  a:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs'}))
+  b:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] =' fs'}))
   assert(a:get('f') == b:get('f'));
 
-  a:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] ='fs2'}))
-  b:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] ='fs2'}))
+  a:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs2'}))
+  b:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs2'}))
   assert(a:get('f') == b:get('f'));
 end
 
@@ -94,16 +94,13 @@ function TestRandomOps:test_works_for_bernoulli_trials()
     return xs
   end
 
-  distributionTester(bernoulli(0.0), {{[0] = 1}, {[1] = 0}}, N)
-  distributionTester(bernoulli(0.1), {{[0] = 0.9}, {[1] = 0.1}}, N)
-  distributionTester(bernoulli(1.0), {{[0] = 0}, {[1] = 1}}, N)
-  distributionTester(bernoulli(0.0), {{[0] = 1}, {[1] = 0}}, N)
-  distributionTester(bernoulli(0.1), {{[0] = 0.9}, {[1] = 0.1}}, N)
-  distributionTester(bernoulli(1.0), {{[0] = 0}, {[1] = 1}, N})
+  distributionTester(bernoulli(0.0), {{['0'] = 1}, {['1'] = 0}}, N)
+  distributionTester(bernoulli(0.1), {{['0'] = 0.9}, {['1'] = 0.1}}, N)
+  distributionTester(bernoulli(1.0), {{['0'] = 0}, {['1'] = 1}}, N)
 
 end
 
-function TestRandomOps:works_for_uniform_choice()
+function TestRandomOps:test_works_for_uniform_choice()
   local N = 10000
   function uniformChoice(choices)
     local xs = {}
@@ -127,14 +124,15 @@ end
 
 function TestRandomOps:test_works_for_weighted_choice()
   local N = 10000
-  function weightedChoice(choices)
+  function weightedChoice(choose)
+
     local xs = {}
-    local weights = _.map(choices, function(choice) return choice[choice[1]] end)
-    local choices = _.map(choices, function(choice) return choice[1] end)
+    local weights = _.map(choose, function(choice) for k,v in pairs(choice) do return v end end)
+    local choices = _.map(choose, function(choice) for k,v in pairs(choice) do return k end end)
     for i=0, N do
       local a = Assignment:new(_.join(weights, ', '))
       a:set('x', WeightedChoice:new({['choices'] = choices, ['weights'] = weights, ['unit'] = i }))
-      xs[i] = a.get('x')
+      xs[i] = a:get('x')
     end
     return xs
   end
@@ -162,9 +160,9 @@ function TestRandomOps:test_works_for_sample()
   function sample(choices, draws)
     local xs = {}
     for i=0, N do
-      local A = Assignment:new(_.join(choices, ', '))
+      local a = Assignment:new(_.join(choices, ', '))
       a:set('x', Sample:new({['choices'] = choices, ['draws'] = draws, ['unit'] = i}))
-      xs[i] = a.get('x')
+      xs[i] = a:get('x')
     end
     return xs
   end
@@ -174,14 +172,14 @@ function TestRandomOps:test_works_for_sample()
     local l = {}
 
     for xs,i in pairs(xsList) do
-      for x,j in pairs(key) do
+      for x,j in pairs(i) do
         if l[j] then
           l[j] = k
         else
-          table.insert(l[j], k)
+          table.insert(l, k)
         end
       end
-      if i == table.getn(xsList) then
+      if i == #xsList then
         for k,v in pairs(l) do
           assertProbs(el, valueDensity, N)
         end
@@ -208,9 +206,9 @@ function TestRandomOps:test_works_for_efficient_sample()
   local draws = 5
 
   local a = Assignment:new(_.join(choices, ', '))
-  a.set('x', Sample:new({['choices'] = choices, ['draws'] = draws, ['unit'] = '1'}))
+  a:set('x', Sample:new({['choices'] = choices, ['draws'] = draws, ['unit'] = '1'}))
   local x = a:get('x')
-  assert(table.getn(x) == 5)
+  assert(#x == 5)
 end
 
 local lu = LuaUnit.new()

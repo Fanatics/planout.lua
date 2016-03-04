@@ -5,7 +5,13 @@ dependencies:
     - sudo apt-get install luarocks
     - sudo luarocks install luafilesystem
     - sudo luarocks install penlight
+    - sudo luarocks install underscore.lua --from=http://marcusirven.s3.amazonaws.com/rocks/
 test:
   override:
     - cd tests && lua testAssignment.lua -v && cd ..
     - cd tests && lua testCoreOps.lua -v & cd ..
+    - cd tests && lua testExperiment.lua -v && cd ..
+    - cd tests && lua testExperimentSetup.lua -v && cd ..
+    - cd tests && lua testInterpreter.lua -v && cd ..
+    - cd tests && lua testNameSpace.lua -v && cd ..
+    - cd tests && lua testRandomOps.lua -v && cd ..

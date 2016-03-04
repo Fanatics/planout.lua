@@ -1,4 +1,4 @@
-package.path = package.path .. ";../src/?.lua;"
+package.path = package.path .. ";../src/?.lua;src/?.lua;"
 require("ops.random")
 local Experiment = require "experiment"
 local Interpreter = require "interpreter"

@@ -1,4 +1,5 @@
 local pretty = require 'pl.pretty'
+local bc = require "bc"
 
 function _new_(self, instance)
   instance = instance or {}
@@ -134,6 +135,14 @@ string.split = function(pString, pPattern)
    return Table
 end
 
+
+function hex2bc(s)
+	local x=bc.number(0)
+	for i=1,#s do
+		x=16*x+tonumber(s:sub(i,i),16)
+	end
+	return x
+end
 
 function range(max)
   local l = {}

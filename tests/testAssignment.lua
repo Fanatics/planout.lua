@@ -24,9 +24,9 @@ function TestAssignment:test_work_with_uniform_choice()
   a:set('bar', UniformChoice:new({['choices'] = choices, ['unit'] = testerUnit}))
   a:set('baz', UniformChoice:new({['choices'] = choices, ['unit'] = testerUnit}))
 
-  --assert(a:get('foo') == "b")
-  --assert(a:get('bar') == "a")
-  --assert(a:get('baz') == "a")
+  assert(a:get('foo') == "b")
+  assert(a:get('bar') == "a")
+  assert(a:get('baz') == "a")
 end
 
 function TestAssignment:test_work_with_overrides()

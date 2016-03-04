@@ -1,6 +1,7 @@
 package.path = package.path .. ";../?.lua"
 require("lib.utils")
 require("ops.base")
+local bc = require "bc"
 
 local sha1 = require "lib.sha1"
 local pretty = require 'pl.pretty'
@@ -9,7 +10,7 @@ PlanOutOpRandom = PlanOutOpSimple:new()
 
 function PlanOutOpRandom:init(args)
   self.args = args
-  self.LONG_SCALE_NON_COMPAT = 0xFFFFFFFFFFFFF;
+  self.LONG_SCALE = bc.number(0xFFFFFFFFFFFFF);
   return self
 end
 
@@ -23,7 +24,7 @@ end
 function PlanOutOpRandom:getUniform(minVal, maxVal, appendedUnit)
   minVal = minVal or 0.0
   maxVal = maxVal or 1.0
-  local zeroToOne = self:getHash(appendedUnit) / self.LONG_SCALE_NON_COMPAT
+  local zeroToOne = bc.tonumber(bc.div(self:getHash(appendedUnit), self.LONG_SCALE))
   return zeroToOne * (maxVal - minVal) + (minVal)
 end
 
@@ -40,7 +41,7 @@ function PlanOutOpRandom:getHash(appendedUnit)
   end), ".")
   local hashStr = fullSalt .. "." .. unitStr
   local hash = sha1(hashStr)
-  return tonumber(string.sub(hash, 0, 13), 16)
+  return hex2bc(string.sub(hash, 0, 15))
 end
 
 
@@ -58,7 +59,7 @@ RandomInteger = PlanOutOpRandom:new()
 function RandomInteger:simpleExecute()
   local minVal = self:getArgNumber('min');
   local maxVal = self:getArgNumber('max');
-  return (self:getHash() + minVal) % (maxVal - minVal + 1);
+  return bc.tonumber((self:getHash() + minVal) % (maxVal - minVal + 1));
 end
 
 
@@ -92,8 +93,7 @@ UniformChoice = PlanOutOpRandom:new()
 function UniformChoice:simpleExecute()
   local values = self:getArgList('choices')
   if #values == 0 then return {} end
-  local rand_index = math.fmod(self:getHash(), #values) + 1
-  --print(JSON:encode(values) .. ":" .. rand_index .. ":" .. values[rand_index])
+  local rand_index = bc.tonumber(bc.mod(self:getHash(), #values)) + 1
   return values[rand_index]
 end
 
@@ -106,8 +106,16 @@ function WeightedChoice:simpleExecute()
   if #values == 0 then return {} end
 
   local cumSum = 0
-  for i, val in ipairs(weights) do cumSum = cumSum + val end
-  local stopVal = self:getUniform(0.0, cumSum) ----
+  local cumWeights = {}
+  for i, val in ipairs(weights) do
+    cumSum = cumSum + val
+    table.insert(cumWeights, cumSum)
+  end
+  local stopVal = self:getUniform(0.0, cumSum)
+  for i, val in ipairs(cumWeights) do
+    if stopVal <= val then return values[i] end
+  end
+  return nil
 end
 
 

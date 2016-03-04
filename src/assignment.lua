@@ -13,7 +13,6 @@ function Assignment:init(experimentSalt, overrides)
   self.experimentSalt = experimentSalt
   self.overrides = shallowcopy(overrides)
   self.data = shallowcopy(overrides)
-
   return self
 end
 

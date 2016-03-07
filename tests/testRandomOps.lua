@@ -210,6 +210,3 @@ function TestRandomOps:test_works_for_efficient_sample()
   local x = a:get('x')
   assert(#x == 5)
 end
-
-local lu = LuaUnit.new()
-os.exit( lu:runSuite() )

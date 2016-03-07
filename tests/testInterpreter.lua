@@ -105,8 +105,3 @@ function TestInterpreter:test_allows_overrides()
   proc:setOverrides({['userid'] = 123453})
   assert(proc:getParams()['specific_goal'] == 1)
 end
-
-
-
-local lu = LuaUnit.new()
-os.exit( lu:runSuite() )

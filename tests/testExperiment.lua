@@ -178,8 +178,3 @@ function TestExperiment:test_not_log_exposure_if_parameter_not_in_experiment()
   e:get('fobz')
   assert(e:getLogLength() == 0)
 end
-
-
-
-local lu = LuaUnit.new()
-os.exit( lu:runSuite() )

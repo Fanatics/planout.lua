@@ -1,4 +1,4 @@
-package.path = package.path .. ';../src/?.lua;'
+package.path = package.path .. ';../src/?.lua;src/?.lua;'
 local Interpreter = require 'interpreter'
 
 local pretty = require 'pl.pretty'

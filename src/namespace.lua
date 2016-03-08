@@ -134,8 +134,7 @@ function SimpleNamespace:setPrimaryUnit(value)
 end
 
 function SimpleNamespace:addExperiment(name, expObject, segments)
-  local numberAvailable = #self.availableSegments;
-
+  local numberAvailable = #self.availableSegments
   if numberAvailable < segments or self.currentExperiments[name] ~= nil
   then return false end
 
@@ -146,13 +145,11 @@ function SimpleNamespace:addExperiment(name, expObject, segments)
     ['unit'] = name
   }))
   local sample = a:get('sampled_segments')
-
   for i, v in ipairs(sample) do
-    self.segmentAllocations[v] = name
+    self.segmentAllocations[v..""] = name
     local currentIndex = table.indexOf(self.availableSegments, v)
     table.remove(self.availableSegments, currentIndex)
   end
-
   self.currentExperiments[name] = expObject
 end
 
@@ -160,7 +157,7 @@ function SimpleNamespace:removeExperiment(name)
   if self.currentExperiments[name] == nil then return false end
   local currentIndex = table.indexOf(self.segmentAllocations, name)
   while currentIndex ~= -1 do
-    self.segmentAllocations[currentIndex] = currentIndex
+    self.segmentAllocations[currentIndex..""] = currentIndex
     table.insert(self.availableSegments, currentIndex)
     self.currentExperiments[name] = nil
     currentIndex = table.indexOf(self.segmentAllocations, name)
@@ -177,7 +174,8 @@ function SimpleNamespace:getSegment()
     ['unit'] = self.inputs[self:getPrimaryUnit()] or ''
   })
   a:set('segment', segment);
-  return a:get('segment') + 1;
+  local segNum = a:get('segment')
+  return segNum + 1
 end
 
 function SimpleNamespace:getDefaultNamespaceName()
@@ -187,8 +185,10 @@ end
 function SimpleNamespace:_assignExperiment()
   self.inputs = table.merge(self.inputs or {}, getExperimentInputs(self:getName()))
   local segment = self:getSegment()
-  if type(self.segmentAllocations[segment]) == "string" then
-    self:_assignExperimentObject(self.segmentAllocations[segment])
+  print(segment)
+  pretty.dump(self.segmentAllocations)
+  if type(self.segmentAllocations[segment..""]) == "string" then
+    self:_assignExperimentObject(self.segmentAllocations[segment..""])
   end
 end
 

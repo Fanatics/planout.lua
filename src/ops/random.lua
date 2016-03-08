@@ -59,7 +59,7 @@ RandomInteger = PlanOutOpRandom:new()
 function RandomInteger:simpleExecute()
   local minVal = self:getArgNumber('min');
   local maxVal = self:getArgNumber('max');
-  return bc.tonumber((self:getHash() + minVal) % (maxVal - minVal + 1));
+  return bc.tonumber(bc.mod(bc.add(self:getHash(), minVal), bc.number(maxVal - minVal + 1)));
 end
 
 
@@ -125,17 +125,13 @@ function Sample:sample(array, numDraws)
   local len = #array
   local stoppingPoint = len - numDraws
   for i, val in ipairs(array) do
-    local j = self:getHash(i) % i
+    local j = bc.tonumber(bc.mod(self:getHash(i), i))
     local temp = array[i]
     array[i] = array[j]
     array[j] = temp;
-
-    if stoppingPoint == i then
-      return table.slice(array, i + 1, len)
-    end
   end
 
-  return table.slice(array, 0, numDraws)
+  return table.slice(array, 1, numDraws)
 end
 
 function Sample:simpleExecute()

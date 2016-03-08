@@ -92,7 +92,7 @@ end
 
 table.indexOf = function( t, object )
 	if "table" == type( t ) then
-		for i=1,#t do
+		for i, v in pairs(t) do
 			if object == t[i] then
 				return i
 			end

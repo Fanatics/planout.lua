@@ -46,6 +46,7 @@ end
 local Experiment1 = BaseExperiment:new()
 
 function Experiment1:assign(params, args)
+  print("here")
   params:set('test', 1)
 end
 
@@ -53,6 +54,7 @@ end
 local Experiment2 = BaseExperiment:new()
 
 function Experiment2:assign(params, args)
+  print("what?")
   params:set('test', 2)
 end
 
@@ -91,7 +93,7 @@ end
 
 local validateSegments = function(namespace, segmentBreakdown)
   local segCounts = {}
-  for segName, seg in ipairs(namespace.segmentAllocations) do
+  for segName, seg in pairs(namespace.segmentAllocations) do
     if segCounts[seg] == nil then segCounts[seg] = 0 end
     segCounts[seg] = segCounts[seg] + 1
   end
@@ -114,22 +116,22 @@ function TestNamespace:test_adds_segment()
   validateSegments(ns, { ['Experiment1'] = 100 })
 end
 
-function TestNamespace:test_adds_2_segements()
-  local TestNamespace = BaseTestNamespace:new()
-  function TestNamespace:setupExperiments()
+function TestNamespaces:test_adds_2_segements()
+  local SetupNamespace = BaseTestNamespace:new()
+  function SetupNamespace:setupExperiments()
     self:addExperiment('Experiment1', Experiment1, 50)
     self:addExperiment('Experiment2', Experiment2, 50)
   end
 
-  local ns = TestNamespace:new({['userid'] = 'blah'})
+  local ns = SetupNamespace:new({['userid'] = 'blah'})
   assert(ns:get('test') == 1)
   validateLog("Experiment1", ns:getLog())
 
-  local ns2 = TestNamespace:new({['userid'] = 'abb'})
+  local ns2 = SetupNamespace:new({['userid'] = 'abb'})
   assert(ns2:get('test') == 2)
   validateLog("Experiment2", ns2:getLog())
 
-  validateSegments(ns, { ['Experiment1'] = 50, ['Experiment2'] = 50 })
+  validateSegments(ns1, { ['Experiment1'] = 50, ['Experiment2'] = 50 })
 end
 
 function TestNamespace:test_removes_segment()

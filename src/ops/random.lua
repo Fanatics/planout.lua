@@ -10,7 +10,7 @@ PlanOutOpRandom = PlanOutOpSimple:new()
 
 function PlanOutOpRandom:init(args)
   self.args = args
-  self.LONG_SCALE = bc.number(0xFFFFFFFFFFFFF);
+  self.LONG_SCALE = hex2bc("FFFFFFFFFFFFFFF");
   return self
 end
 

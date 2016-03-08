@@ -90,6 +90,7 @@ local interpreterSalt = 'foo'
 function TestInterpreter:test_works_as_intended()
   local proc = Interpreter:new(compiled, interpreterSalt, {['userid'] = 123454})
   local params = proc:getParams()
+
   assert(params['specific_goal'] == 1)
   assert(params['ratings_goal'] == 320)
 end
@@ -101,7 +102,8 @@ function TestInterpreter:test_allows_overrides()
   assert(params['specific_goal'] == 0)
   assert(params['ratings_goal'] == nil)
 
-  proc = Interpreter:new(compiled, interpreterSalt, {['userid'] = 123454})
-  proc:setOverrides({['userid'] = 123453})
+  proc = Interpreter:new(compiled, interpreterSalt, {['userid'] = 123453})
+  proc:setOverrides({['userid'] = 123454})
+
   assert(proc:getParams()['specific_goal'] == 1)
 end

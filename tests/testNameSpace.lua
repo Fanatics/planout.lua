@@ -11,7 +11,7 @@ require('resources.luaunit')
 TestNamespace = {}
 TestNamespaces = {}
 
-BaseExperiment = Experiment:new()
+local BaseExperiment = Experiment:new()
 
 function BaseExperiment:configureLogger()
   if self.globalLog == nil then self.globalLog = {} end
@@ -43,28 +43,28 @@ function BaseExperiment:setup()
 end
 
 
-Experiment1 = BaseExperiment:new()
+local Experiment1 = BaseExperiment:new()
 
 function Experiment1:assign(params, args)
   params:set('test', 1)
 end
 
 
-Experiment2 = BaseExperiment:new()
+local Experiment2 = BaseExperiment:new()
 
 function Experiment2:assign(params, args)
   params:set('test', 2)
 end
 
 
-Experiment3 = BaseExperiment:new()
+local Experiment3 = BaseExperiment:new()
 
 function Experiment3:assign(params, args)
   params:set('test', 3)
 end
 
 
-BaseTestNamespace = SimpleNamespace:new()
+local BaseTestNamespace = SimpleNamespace:new()
 
 function BaseTestNamespace:setup()
   self:setName('test')

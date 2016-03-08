@@ -49,6 +49,3 @@ function TestAssignment:test_work_with_falsy_overrides()
   assert(a:get('y') == '')
   assert(a:get('z') == false)
 end
-
-local lu = LuaUnit.new()
-os.exit( lu:runSuite() )

@@ -4,8 +4,8 @@ require("ops.core")
 
 local pretty = require 'pl.pretty'
 
-local Experiment = require "Experiment"
-local Assignment = require "Assignment"
+local Experiment = require "experiment"
+local Assignment = require "assignment"
 
 local Interpreter = {}
 

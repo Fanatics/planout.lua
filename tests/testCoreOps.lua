@@ -273,6 +273,3 @@ function TestCoreOps:test_work_with_return()
   assert(i:getParams()['x'] == 2)
   assert(i:inExperiment() == false)
 end
-
-local lu = LuaUnit.new()
-os.exit( lu:runSuite() )

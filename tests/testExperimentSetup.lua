@@ -107,7 +107,3 @@ function TestExperimentSetup:test_works_with_function_inputs()
   registerExperimentInput('funcVal', function() return '3' end)
   assert(namespace:get('funcVal') == '3')
 end
-
-
-local lu = LuaUnit.new()
-os.exit( lu:runSuite() )

@@ -332,8 +332,3 @@ function TestNamespace:test_works_as_expected()
   end
   assert(count >= 5500 and count <= 6500)
 end
-
-
-
-local lu = LuaUnit.new()
-os.exit( lu:runSuite() )

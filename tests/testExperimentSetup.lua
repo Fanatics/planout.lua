@@ -9,101 +9,102 @@ EXPORT_ASSERT_TO_GLOBALS = true
 require("resources.luaunit")
 
 TestExperimentSetup = {}
-TestExperimentSetups = {}
 
-local BaseExperiment = Experiment:new()
+local SetupBaseExperiment = Experiment:new()
 
-function BaseExperiment:configureLogger()
+function SetupBaseExperiment:configureLogger()
   if self.globalLog == nil then self.globalLog = {} end
   return nil
 end
 
-function BaseExperiment:log(stuff)
+function SetupBaseExperiment:log(stuff)
   table.insert(self.globalLog, stuff)
 end
 
-function BaseExperiment:previouslyLogged()
+function SetupBaseExperiment:previouslyLogged()
   return nil
 end
 
-function BaseExperiment:getLog()
+function SetupBaseExperiment:getLog()
   return self.globalLog
 end
 
-function BaseExperiment:getLogLength()
+function SetupBaseExperiment:getLogLength()
   return #self.globalLog
 end
 
-function BaseExperiment:getParamNames()
+function SetupBaseExperiment:getParamNames()
   return self:getDefaultParamNames()
 end
 
-function BaseExperiment:setup()
+function SetupBaseExperiment:setup()
   self.name = 'test_name'
 end
 
-local Experiment1 = BaseExperiment:new()
+local SetupExperiment1 = SetupBaseExperiment:new()
 
-function Experiment1:assign(params, args)
+function SetupExperiment1:assign(params, args)
   params:set('foo', UniformChoice:new({['choices'] = {'a','b'}, ['unit'] = args['userid']}))
   params:set('paramVal', args.paramVal)
   params:set('funcVal', args.funcVal)
 end
 
-local Experiment2 = BaseExperiment:new()
+local SetupExperiment2 = SetupBaseExperiment:new()
 
-function Experiment2:assign(params, args)
+function SetupExperiment2:assign(params, args)
   params:set('foobar', UniformChoice:new({['choices'] = {'a','b'}, ['unit'] = args['userid']}))
   params:set('paramVal', args.paramVal)
   params:set('funcVal', args.funcVal)
 end
 
-local BaseTestNamespace = SimpleNamespace:new()
+local SetupBaseTestNamespace = SimpleNamespace:new()
 
-function BaseTestNamespace:setup()
+function SetupBaseTestNamespace:setup()
   self:setName('testThis')
   self:setPrimaryUnit('userid')
 end
 
-function BaseTestNamespace:setupDefaults()
+function SetupBaseTestNamespace:setupDefaults()
   self.numSegments = 100
 end
 
-function BaseTestNamespace:setupExperiments()
-  self:addExperiment('Experiment1', Experiment1, 50);
-  self:addExperiment('Experiment2', Experiment2, 50);
+function SetupBaseTestNamespace:setupExperiments()
+  self:addExperiment('Experiment1', SetupExperiment1, 50);
+  self:addExperiment('Experiment2', SetupExperiment2, 50);
 end
 
 function TestExperimentSetup:test_works_with_global_inputs()
-  local namespace = BaseTestNamespace:new({['userid'] = 'a'})
+  local namespace = SetupBaseTestNamespace:new({['userid'] = 'a'})
   local fooVal = namespace:get('foo')
   local foobarVal = namespace:get('foobar')
-  local namespace2 = BaseTestNamespace:new({['userid'] = 'a'})
+  local namespace2 = SetupBaseTestNamespace:new({['userid'] = 'a'})
   registerExperimentInput('userid', 'a')
   assert(namespace2:get('foo') == fooVal)
   assert(namespace2:get('foobar') == foobarVal)
+
+  clearExperimentInput('userid')
 end
 
-function TestExperimentSetups:test_works_with_scoped_inputs()
-  local namespace = BaseTestNamespace:new({['userid'] = 'a'})
+function TestExperimentSetup:test_works_with_scoped_inputs()
+  local namespace = SetupBaseTestNamespace:new({['userid'] = 'a'})
   registerExperimentInput('paramVal', '3', namespace:getName())
 
   assert(namespace:get('paramVal') == '3')
 
-  local TestNamespace = BaseTestNamespace:new()
+  local SetupTestNamespace = SetupBaseTestNamespace:new()
 
-  function TestNamespace:setup()
+  function SetupTestNamespace:setup()
     self:setName('test2')
     self:setPrimaryUnit('userid')
   end
 
-  local namespace2 = TestNamespace:new({['userid'] = 'a'})
+  local namespace2 = SetupTestNamespace:new({['userid'] = 'a'})
   assert(namespace2:get('foo') == nil)
   assert(namespace2:get('paramVal') == nil)
 end
 
 function TestExperimentSetup:test_works_with_function_inputs()
-  local namespace = BaseTestNamespace:new({['userid'] = 'a'})
+  local namespace = SetupBaseTestNamespace:new({['userid'] = 'a'})
   registerExperimentInput('funcVal', function() return '3' end)
   assert(namespace:get('funcVal') == '3')
 end

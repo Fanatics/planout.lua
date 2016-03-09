@@ -27,6 +27,15 @@ function registerExperimentInput(key, value, experimentName)
   end
 end
 
+function clearExperimentInput(key, experimentName)
+  if experimentName == nil then globalInputArgs[key] = nil
+  else
+    if experimentSpecificInputArgs[experimentName] ~= nil then
+      experimentSpecificInputArgs[experimentName][key] = nil
+    end
+  end
+end
+
 function getExperimentInputs(experimentName)
   local inputArgs = fetchInputs(globalInputArgs)
   if experimentName ~= nil and experimentSpecificInputArgs[experimentName] ~= nil then

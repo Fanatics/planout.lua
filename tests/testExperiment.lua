@@ -11,7 +11,7 @@ require("resources.luaunit")
 TestExperiment = {}
 
 
-BaseExperiment = Experiment:new()
+local BaseExperiment = Experiment:new()
 
 function BaseExperiment:configureLogger()
   if self.globalLog == nil then self.globalLog = {} end

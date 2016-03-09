@@ -43,23 +43,23 @@ function BaseExperiment:setup()
 end
 
 
-local Experiment1 = BaseExperiment:new()
+local NSExperiment1 = BaseExperiment:new()
 
-function Experiment1:assign(params, args)
+function NSExperiment1:assign(params, args)
   params:set('test', 1)
 end
 
 
-local Experiment2 = BaseExperiment:new()
+local NSExperiment2 = BaseExperiment:new()
 
-function Experiment2:assign(params, args)
+function NSExperiment2:assign(params, args)
   params:set('test', 2)
 end
 
 
-local Experiment3 = BaseExperiment:new()
+local NSExperiment3 = BaseExperiment:new()
 
-function Experiment3:assign(params, args)
+function NSExperiment3:assign(params, args)
   params:set('test', 3)
 end
 
@@ -103,7 +103,7 @@ end
 function TestNamespace:test_adds_segment()
   local SetupNamespace = BaseTestNamespace:new()
   function SetupNamespace:setupExperiments()
-    self:addExperiment('Experiment1', Experiment1, 100)
+    self:addExperiment('Experiment1', NSExperiment1, 100)
   end
 
   local ns = SetupNamespace:new({['userid'] = 'blah'})
@@ -117,8 +117,8 @@ end
 function TestNamespace:test_adds_2_segements()
   local SetupNamespace = BaseTestNamespace:new()
   function SetupNamespace:setupExperiments()
-    self:addExperiment('Experiment1', Experiment1, 50)
-    self:addExperiment('Experiment2', Experiment2, 50)
+    self:addExperiment('Experiment1', NSExperiment1, 50)
+    self:addExperiment('Experiment2', NSExperiment2, 50)
   end
 
   local ns = SetupNamespace:new({['userid'] = 'blah'})
@@ -126,7 +126,9 @@ function TestNamespace:test_adds_2_segements()
   validateLog("Experiment1", ns:getLog())
 
   local ns2 = SetupNamespace:new({['userid'] = 'abb'})
-  assert(ns2:get('test') == 2)
+  local testValue = ns2:get('test')
+  print(ns2.currentSegment)
+  assert(testValue == 2)
   validateLog("Experiment2", ns2:getLog())
 
   validateSegments(ns, { ['Experiment1'] = 50, ['Experiment2'] = 50 })
@@ -138,9 +140,9 @@ function TestNamespace:test_removes_segment()
     self.numSegments = 10
   end
   function TestNamespace:setupExperiments()
-    self:addExperiment('Experiment1', Experiment1, 10)
+    self:addExperiment('Experiment1', NSExperiment1, 10)
     self:removeExperiment('Experiment1')
-    self:addExperiment('Experiment2', Experiment2, 10)
+    self:addExperiment('Experiment2', NSExperiment2, 10)
   end
 
   local ns
@@ -165,8 +167,8 @@ function TestNamespace:test_expose_only_when_potential_member()
     self.numSegments = 10
   end
   function TestNamespace:setupExperiments()
-    self:addExperiment('Experiment1', Experiment1, 5)
-    self:addExperiment('Experiment3', Experiment3, 5)
+    self:addExperiment('Experiment1', NSExperiment1, 5)
+    self:addExperiment('Experiment3', NSExperiment3, 5)
   end
 
   local ns = TestNamespace:new({['userid'] = 'hi'})
@@ -179,8 +181,8 @@ end
 function TestNamespace:test_can_override_namespace()
   local TestNamespace = BaseTestNamespace:new()
   function TestNamespace:setupExperiments()
-    self:addExperiment('Experiment1', Experiment1, 50)
-    self:addExperiment('Experiment2', Experiment2, 50)
+    self:addExperiment('Experiment1', NSExperiment1, 50)
+    self:addExperiment('Experiment2', NSExperiment2, 50)
   end
   function TestNamespace:allowedOverride() return true end
   function TestNamespace:getOverrides()
@@ -224,7 +226,7 @@ function TestNamespace:test_respects_auto_exposer_logging_turned_off()
 end
 
 function TestNamespace:test_works_with_dynamic_get_parameter_names()
-  local ExperimentParamTest = Experiment1:new()
+  local ExperimentParamTest = NSExperiment1:new()
   function ExperimentParamTest:assign(params, args)
     local clonedArgs = shallowcopy(args)
     clonedArgs.userid = nil
@@ -318,7 +320,7 @@ function TestNamespace:test_works_as_expected()
     self.numSegments = 10
   end
   function TestNamespaces:setupExperiments()
-    self:addExperiment('Experiment1', Experiment1, 6)
+    self:addExperiment('Experiment1', NSExperiment1, 6)
   end
 
   local count = 0

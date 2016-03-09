@@ -193,8 +193,8 @@ end
 function SimpleNamespace:_assignExperiment()
   self.inputs = table.merge(self.inputs or {}, getExperimentInputs(self:getName()))
   local segment = self:getSegment()
-
   if self.segmentAllocations[segment] ~= -1 then
+    self.currentSegment = segment
     self:_assignExperimentObject(self.segmentAllocations[segment])
   end
 end

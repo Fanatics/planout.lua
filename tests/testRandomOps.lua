@@ -74,7 +74,7 @@ function TestRandomOps:test_salts_correctly()
   assert(a:get('x') ~= b:get('x'));
 
   a:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs'}))
-  b:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] =' fs'}))
+  b:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs'}))
   assert(a:get('f') == b:get('f'));
 
   a:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs2'}))

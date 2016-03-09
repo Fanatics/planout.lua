@@ -135,6 +135,22 @@ string.split = function(pString, pPattern)
    return Table
 end
 
+table.filledLength = function(table)
+  local len = 0
+  for i, v in ipairs(table) do
+    if v ~= -1 then len = len + 1 end
+  end
+  return len
+end
+
+table.length = function(table)
+  if #table == 0 then
+    local i = 0
+    for k,v in pairs(table) do i = i + 1 end
+    return i
+  end
+  return #table
+end
 
 function hex2bc(s)
 	local x=bc.number(0)
@@ -144,9 +160,9 @@ function hex2bc(s)
 	return x
 end
 
-function range(max)
+function range(max, start)
   local l = {}
-  for i = 1, max do
+  for i = start or 1, max do
     table.insert(l, i)
   end
   return l

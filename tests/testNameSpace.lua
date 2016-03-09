@@ -46,7 +46,6 @@ end
 local Experiment1 = BaseExperiment:new()
 
 function Experiment1:assign(params, args)
-  print("here")
   params:set('test', 1)
 end
 
@@ -54,7 +53,6 @@ end
 local Experiment2 = BaseExperiment:new()
 
 function Experiment2:assign(params, args)
-  print("what?")
   params:set('test', 2)
 end
 
@@ -103,20 +101,20 @@ local validateSegments = function(namespace, segmentBreakdown)
 end
 
 function TestNamespace:test_adds_segment()
-  local TestNamespace = BaseTestNamespace:new()
-  function TestNamespace:setupExperiments()
+  local SetupNamespace = BaseTestNamespace:new()
+  function SetupNamespace:setupExperiments()
     self:addExperiment('Experiment1', Experiment1, 100)
   end
 
-  local ns = TestNamespace:new({['userid'] = 'blah'})
+  local ns = SetupNamespace:new({['userid'] = 'blah'})
   assert(ns:get('test') == 1)
-  assert(#ns.availableSegments == 0)
-  assert(#ns.segmentAllocations == 100)
+  assert(table.filledLength(ns.availableSegments) == 0)
+  assert(table.filledLength(ns.segmentAllocations) == 100)
   validateLog("Experiment1", ns:getLog())
   validateSegments(ns, { ['Experiment1'] = 100 })
 end
 
-function TestNamespaces:test_adds_2_segements()
+function TestNamespace:test_adds_2_segements()
   local SetupNamespace = BaseTestNamespace:new()
   function SetupNamespace:setupExperiments()
     self:addExperiment('Experiment1', Experiment1, 50)
@@ -131,7 +129,7 @@ function TestNamespaces:test_adds_2_segements()
   assert(ns2:get('test') == 2)
   validateLog("Experiment2", ns2:getLog())
 
-  validateSegments(ns1, { ['Experiment1'] = 50, ['Experiment2'] = 50 })
+  validateSegments(ns, { ['Experiment1'] = 50, ['Experiment2'] = 50 })
 end
 
 function TestNamespace:test_removes_segment()
@@ -250,7 +248,7 @@ end
 
 function TestNamespace:test_works_with_get_params()
   local SimpleExperiment = BaseExperiment:new()
-  function SimpleExperiment: assign(params,args)
+  function SimpleExperiment:assign(params,args)
     params:set('test', 1)
   end
 
@@ -268,7 +266,7 @@ function TestNamespace:test_works_with_get_params()
   ns:getParams('SimpleExperiment')
   assert(#ns:getLog() == 0)
 
-  local ns2 = TestNamespace:new({['userid'] = 'hi', ['foo'] = 1, ['bar'] = 1})
+  local ns2 = TestNamespace2:new({['userid'] = 'hi', ['foo'] = 1, ['bar'] = 1})
   local params = ns2:getParams('SimpleExperiment')
   assert(#ns2:getLog() == 1)
   assert(params['test'] == 1)

@@ -89,7 +89,6 @@ function SimpleNamespace:init(args)
     self.name = self:getDefaultNamespaceName()
     self.inputs = args or {}
     self.numSegments = 1
-    self.segmentAllocations = {}
     self.currentExperiments = {}
 
     self._experiment = nil
@@ -99,7 +98,9 @@ function SimpleNamespace:init(args)
 
     self:setupDefaults();
     self:setup();
-    self.availableSegments = range(self.numSegments);
+    self.availableSegments = range(self.numSegments)
+    self.segmentAllocations = range(self.numSegments)
+    for i, v in ipairs(self.segmentAllocations) do self.segmentAllocations[i] = -1 end
     self:setupExperiments();
   end
   return self
@@ -134,22 +135,29 @@ function SimpleNamespace:setPrimaryUnit(value)
 end
 
 function SimpleNamespace:addExperiment(name, expObject, segments)
-  local numberAvailable = #self.availableSegments
+  local numberAvailable = table.filledLength(self.availableSegments)
   if numberAvailable < segments or self.currentExperiments[name] ~= nil
   then return false end
 
   local a = Assignment:new(self.name);
+  local newSample = {}
+  for i, v in ipairs(self.availableSegments) do
+    if v ~= -1 then
+      table.insert(newSample, i)
+    end
+  end
   a:set('sampled_segments', Sample:new({
-    ['choices'] = self.availableSegments,
+    ['choices'] = newSample,
     ['draws'] = segments,
     ['unit'] = name
   }))
   local sample = a:get('sampled_segments')
+
   for i, v in ipairs(sample) do
-    self.segmentAllocations[v..""] = name
-    local currentIndex = table.indexOf(self.availableSegments, v)
-    table.remove(self.availableSegments, currentIndex)
+    self.segmentAllocations[v] = name
+    self.availableSegments[v] = -1
   end
+
   self.currentExperiments[name] = expObject
 end
 
@@ -157,8 +165,8 @@ function SimpleNamespace:removeExperiment(name)
   if self.currentExperiments[name] == nil then return false end
   local currentIndex = table.indexOf(self.segmentAllocations, name)
   while currentIndex ~= -1 do
-    self.segmentAllocations[currentIndex..""] = currentIndex
-    table.insert(self.availableSegments, currentIndex)
+    self.segmentAllocations[currentIndex] = -1
+    self.availableSegments[currentIndex] = currentIndex
     self.currentExperiments[name] = nil
     currentIndex = table.indexOf(self.segmentAllocations, name)
   end
@@ -185,10 +193,9 @@ end
 function SimpleNamespace:_assignExperiment()
   self.inputs = table.merge(self.inputs or {}, getExperimentInputs(self:getName()))
   local segment = self:getSegment()
-  print(segment)
-  pretty.dump(self.segmentAllocations)
-  if type(self.segmentAllocations[segment..""]) == "string" then
-    self:_assignExperimentObject(self.segmentAllocations[segment..""])
+
+  if self.segmentAllocations[segment] ~= -1 then
+    self:_assignExperimentObject(self.segmentAllocations[segment])
   end
 end
 

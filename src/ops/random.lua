@@ -122,10 +122,8 @@ end
 Sample = PlanOutOpRandom:new()
 
 function Sample:sample(array, numDraws)
-  local len = #array
-  local stoppingPoint = len - numDraws
-  for i, val in ipairs(array) do
-    local j = bc.tonumber(bc.mod(self:getHash(i), i))
+  for i = #array, 1, -1 do
+    local j = bc.tonumber(bc.mod(self:getHash(i), i + 1)) + 1
     local temp = array[i]
     array[i] = array[j]
     array[j] = temp;

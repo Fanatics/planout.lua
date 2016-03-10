@@ -24,7 +24,7 @@ end
 
 function PlanOutOp:getArgMixed(name)
   local cur = self.args[name]
-  if type(cur) == "nil" then error("Property '" .. name .. "' is not defined") end
+  if cur == nil then error("Property '" .. name .. "' is not defined") end
   return cur
 end
 

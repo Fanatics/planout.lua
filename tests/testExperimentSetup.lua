@@ -9,6 +9,7 @@ EXPORT_ASSERT_TO_GLOBALS = true
 require("resources.luaunit")
 
 TestExperimentSetup = {}
+TestExperimentSetup2 = {}
 
 local SetupBaseExperiment = Experiment:new()
 
@@ -85,7 +86,8 @@ function TestExperimentSetup:test_works_with_global_inputs()
   clearExperimentInput('userid')
 end
 
-function TestExperimentSetup:test_works_with_scoped_inputs()
+function TestExperimentSetup2:test_works_with_scoped_inputs()
+  registerExperimentInput('userid', 'a')
   local namespace = SetupBaseTestNamespace:new({['userid'] = 'a'})
   registerExperimentInput('paramVal', '3', namespace:getName())
 
@@ -98,9 +100,10 @@ function TestExperimentSetup:test_works_with_scoped_inputs()
     self:setPrimaryUnit('userid')
   end
 
-  local namespace2 = SetupTestNamespace:new({['userid'] = 'a'})
+  local namespace2 = SetupTestNamespace:new({})
   assert(namespace2:get('foo') == nil)
   assert(namespace2:get('paramVal') == nil)
+  clearExperimentInput('userid')
 end
 
 function TestExperimentSetup:test_works_with_function_inputs()

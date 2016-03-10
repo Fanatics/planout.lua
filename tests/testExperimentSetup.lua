@@ -99,6 +99,8 @@ function TestExperimentSetup:test_works_with_scoped_inputs()
   end
 
   local namespace2 = SetupTestNamespace:new({['userid'] = 'a'})
+ -- Works in js noncompat mode but is a larger number in lua and compat mode
+  --assert(namespace2:get('foo') == nil)
   assert(namespace2:get('paramVal') == nil)
 end
 

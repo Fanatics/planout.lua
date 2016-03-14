@@ -11,4 +11,3 @@ test:
 
 clean:
 	rm -f dist/planout.lua
-	rm -f tests/tests.lua

@@ -1,6 +1,10 @@
 
 redis = {}
 
+redis.call = function()
+  return {}
+end
+
 redis.sha1hex = (function()
   local sha1 = {
     _VERSION     = "sha.lua 0.5.0",

@@ -3,10 +3,10 @@ require "redis-lib"
 local arguments = {}
 local success, errState = pcall(function()
   if #KEYS == #ARGV then
-    for i, keyname in pairs(KEYS) do arguments[keyname] = ARGV[i] end
+    for i, keyname in ipairs(KEYS) do arguments[keyname] = ARGV[i] end
   end
 end)
-if not success then return cjson.encode(errState) end
+if not success then return cjson.encode(arguments) end
 
 return (function(args)
 
@@ -322,9 +322,6 @@ return (function(args)
     end
 
     return cjson.encode(my_input)
-  end)({
-    ['user_id'] = 123454,
-    ['salt'] = 'foo'
-  })
+  end)(args)
 
 end)(arguments)

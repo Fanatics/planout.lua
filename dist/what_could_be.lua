@@ -1,7 +1,14 @@
 require "redis-lib"
 --<<--
+local arguments = {}
+local success, errState = pcall(function()
+  if #KEYS == #ARGV then
+    for i, keyname in pairs(KEYS) do arguments[keyname] = ARGV[i] end
+  end
+end)
+if not success then return cjson.encode(errState) end
 
-return (function(keys, args)
+return (function(args)
 
   -- Lib --
   local _new_ = function(self, instance)
@@ -277,7 +284,7 @@ return (function(keys, args)
   end
 
   return (function(my_input)
-    local var = cjson.decode(redis.call("get", args[1]))
+    local var = cjson.decode(redis.call("get", args['domain']))
 
     local status, err = pcall(function() merge(my_input, var) end)
     if not status then return cjson.encode(err) end
@@ -320,4 +327,4 @@ return (function(keys, args)
     ['salt'] = 'foo'
   })
 
-end)(KEYS, ARGV)
+end)(arguments)

@@ -13,7 +13,7 @@ fs.readFile('./what_could_be.lua', 'utf8', (err, data) => {
   var scriptManager = new Scripto(client)
   scriptManager.load({"load-do": file})
 
-  scriptManager.run("load-do", ["domain"], ["do-fanatics.com"], function(err, result) {
+  scriptManager.run("load-do", ["domain", "user_id", "salt"], ["do-fanatics.com", "123454", "foo"], function(err, result) {
     console.log(result)
   })
 });

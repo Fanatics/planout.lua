@@ -1,13 +1,82 @@
 const Promise = require('bluebird')
 const fs = require('fs')
-const redis = require('redis')
-const Scripto = require('redis-scripto');
-Promise.promisifyAll(redis.RedisClient.prototype)
+const writer = require("./lua-writer")
 
-const client = redis.createClient(6379, 'dockerip')
-
-var scriptManager = new Scripto(client)
-
-scriptManager.run("what", [], [], function(err, result) {
-  console.log(result)
-})
+const input = {
+  'op': 'seq',
+  'seq': [
+    {
+      'op': 'set',
+      'var': 'group_size',
+      'value': {
+        'choices': {'op': 'array', 'values': [1,10]},
+        'unit': {
+          'op': 'get',
+          'var': 'userid'
+        },
+        'op': 'uniformChoice'
+      }
+    },
+    {
+      'op': 'set',
+      'var': 'specific_goal',
+      'value': {
+        'p': 0.8,
+        'unit': {
+          'op': 'get',
+          'var': 'userid'
+        },
+        'op': 'bernoulliTrial'
+      }
+    },
+    {
+      'op': 'cond',
+      'cond': [
+        {
+          'if': {
+            'op': 'get',
+            'var': 'specific_goal'
+          },
+          'then': {
+            'op': 'seq',
+            'seq': [
+              {
+                'op': 'set',
+                'var': 'ratings_per_user_goal',
+                'value': {
+                  'choices': {
+                    'op': 'array',
+                    'values': [8,16,32,64]
+                  },
+                  'unit': {
+                    'op': 'get',
+                    'var': 'userid'
+                  },
+                  'op': 'uniformChoice'
+                }
+              },
+              {
+                'op': 'set',
+                'var': 'ratings_goal',
+                'value': {
+                  'op': 'product',
+                  'values': [
+                    {
+                      'op': 'get',
+                      'var': 'group_size'
+                    },
+                    {
+                      'op': 'get',
+                      'var': 'ratings_per_user_goal'
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+writer.parse(input)

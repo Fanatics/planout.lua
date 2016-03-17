@@ -1,5 +1,7 @@
+'use strict'
 var writer = {}
 var EventEmitter = require("./EventEmitter")
+var { OpWriter, GetWriter, SeqOpWriter, CondOpWriter } = require("./OpWriters")
 
 const PREAMBLE = `local arguments = {}
 local success, errState = pcall(function()
@@ -9,23 +11,27 @@ local success, errState = pcall(function()
 end)
 if not success then return cjson.encode(arguments) end
 
-return (function(args)`
+return (function(args)
+`
 
 const POST = `
-  return cjson.encode(my_input)
-end)(args)`
+end)(arguments)
+`
 
-const ACTION = `return (function(my_input)
-  local var = cjson.decode(redis.call("get", args['domain']))
+const ACTION = `
+  return (function(my_input)
+    local var = cjson.decode(redis.call("get", args['domain']))
 
-  local status, err = pcall(function() merge(my_input, var) end)
-  if not status then return cjson.encode(err) end
+    local status, err = pcall(function() merge(my_input, var) end)
+    if not status then return cjson.encode(err) end
 
-  local user_id_assigment = Assignment:new(my_input['salt'])`
+    local user_id_assigment = Assignment:new(my_input['salt'])
+`
 
 const ACTION_END = `
-  return cjson.encode(my_input)
-end)(args)`
+    return cjson.encode(my_input)
+  end)(args)
+`
 
 const required_func = [
   '_new_',
@@ -43,15 +49,11 @@ const required_class = [
   'Assignment'
 ]
 
-class OpWriter {
-  constructor(settings) {
-    this.settings = settings
-  }
-}
-
 class ValueParser {
-  constructor(settings) {
+  constructor(settings, writer) {
     this.settings = settings
+    this.writer = writer
+    this.children = []
   }
 
   getPropertyName() {
@@ -61,9 +63,19 @@ class ValueParser {
   prepare() {
     var val = this.settings[this.getPropertyName()]
 
+    this.process(val)
+  }
+
+  process(val) {
     if(val && val.op) {
-      search(val)
+      this.children.push(search(val))
     }
+  }
+
+  write(buffer) {
+    this.writer.beginWrite(buffer)
+    this.children.forEach((child) => child.write(buffer))
+    this.writer.endWrite(buffer)
   }
 }
 
@@ -77,45 +89,73 @@ class ValuesParser extends ValueParser {
   getPropertyName() {
     return 'values'
   }
+
+  process(val) {
+    if(val instanceof Array) {
+        val.forEach((item) => super.process(item))
+    }
+  }
 }
 
-class SequenceParser extends ValueParser {
-  prepare() {
-    var val = this.settings['seq']
+class SequenceParser extends ValuesParser {
+  getPropertyName() {
+    return 'seq'
+  }
+}
 
-    if(val instanceof Array) {
-        val.forEach((item) => search(item))
-    }
+class MultiNameParser extends ValueParser {
+  prepare() {
+    var property = this.getPropertyName()
+    property.forEach((prop) => {
+      this.process(this.settings[prop])
+    })
   }
 }
 
 class CondParser extends ValueParser {
   getPropertyName() {
-    return 'if'
+    return 'cond'
+  }
+
+  process(val) {
+    if(val instanceof Array) {
+        val.forEach((item) => {
+          this.ifCond = search(item.if)
+          this.thenAction = search(item.then)
+        })
+    }
   }
 }
 
-class BinaryParser extends ValueParser {
-  prepare() {
-    var val = this.settings['left']
-
-    if(val && val.op) {
-      search(val)
-    }
-
-    val = this.settings['right']
-
-    if(val && val.op) {
-      search(val)
+function MakeMultiNameParser() {
+  var args = arguments
+  return class ExtentedParser extends MultiNameParser {
+    getPropertyName() {
+      return [...args]
     }
   }
+}
+
+var BinaryParser = MakeMultiNameParser("left", "right")
+var RandomNumberParser = MakeMultiNameParser("min", "max", "unit")
+
+function write_funcs(required, buffer) {
+  required.forEach((func) => {
+    buffer.push("--", func, "\n")
+  })
+}
+
+function write_classes(required, buffer) {
+  required.forEach((className) => {
+    buffer.push("--", className, "\n")
+  })
 }
 
 const ops = {
   'literal': {'lua-class': "Literal", 'parser': ValueParser},
   'get': {'lua-class': "Get", 'parser': VarParser},
   'set': {'lua-class': "Set", 'parser': ValueParser},
-  'seq': {'lua-class': "Seq", 'parser': SequenceParser},
+  'seq': {'lua-class': "Seq", 'parser': SequenceParser, 'opWriter': SeqOpWriter},
   'return': {'lua-class': "Return", 'parser': ValueParser},
   'index': {'lua-class': "Index", 'parser': ValueParser},
   'array': {'lua-class': "Arr", 'parser': ValuesParser},
@@ -136,16 +176,16 @@ const ops = {
   'length': {'lua-class': "Length", 'parser': ValueParser},
   'coalesce': {'lua-class': "Coalesce", 'parser': ValuesParser},
   'map': {'lua-class': "Map", 'parser': ValueParser},
-  'cond': {'lua-class': "Cond", 'parser': CondParser},
+  'cond': {'lua-class': "Cond", 'parser': CondParser, 'opWriter': CondOpWriter},
   'product': {'lua-class': "Product", 'parser': ValuesParser},
   'sum': {'lua-class': "Sum", 'parser': ValuesParser},
-  'randomFloat': {'lua-class': "RandomFloat", 'parser': ValueParser},
-  'randomInteger': {'lua-class': "RandomInteger", 'parser': ValueParser},
-  'bernoulliTrial': {'lua-class': "BernoulliTrial", 'parser': ValueParser},
-  'bernoulliFilter': {'lua-class': "BernoulliFilter", 'parser': ValueParser},
-  'uniformChoice': {'lua-class': "UniformChoice", 'parser': ValueParser},
-  'weightedChoice': {'lua-class': "WeightedChoice", 'parser': ValueParser},
-  'sample': {'lua-class': "Sample", 'parser': ValueParser}
+  'randomFloat': {'lua-class': "RandomFloat", 'parser': RandomNumberParser},
+  'randomInteger': {'lua-class': "RandomInteger", 'parser': RandomNumberParser},
+  'bernoulliTrial': {'lua-class': "BernoulliTrial", 'parser': MakeMultiNameParser("p", "unit")},
+  'bernoulliFilter': {'lua-class': "BernoulliFilter", 'parser': MakeMultiNameParser("p", "choices", "unit")},
+  'uniformChoice': {'lua-class': "UniformChoice", 'parser': MakeMultiNameParser("choices", "unit")},
+  'weightedChoice': {'lua-class': "WeightedChoice", 'parser': MakeMultiNameParser("choices", "weights", "unit")},
+  'sample': {'lua-class': "Sample", 'parser': MakeMultiNameParser("choices", "draws", "unit")}
 }
 
 const ops_dependencies = {
@@ -173,41 +213,67 @@ var dependency_funcs = {}
 var dependency_class = {}
 var sequence = []
 
-EventEmitter.onSync("object.op", function(event, settings, op) {
-  found_ops[op] = true
+function GenParser(settings, op) {
+  var opers = found_ops[op]
+  if(opers === undefined) {
+    opers = [];
+    found_ops[op] = opers;
+  }
+  opers.push(settings)
 
   if(ops[op]) {
-    var parser = new (ops[op].parser || ValueParser)(settings)
     var opWriter = new (ops[op].opWriter || OpWriter)(settings)
-    sequence.push({ parser, opWriter })
-    parser.prepare();
+    var parser = new (ops[op].parser || ValueParser)(settings, opWriter)
+    parser.prepare()
+    return parser
   }
-})
+}
 
 function search(input) {
   if(input instanceof Array) {
-    input.forEach((item) => {
-      search(item)
+    return input.map((item) => {
+      return search(item)
     })
   } else if(input instanceof Object) {
     if(input.op) {
-      EventEmitter.trigger(`object.op`, input, input.op)
+      return GenParser(input, input.op)
+    } else {
+      return Object.keys(input).map((prop) => {
+        return search(input[prop])
+      })
     }
   }
 }
 
 writer.parse = function parse(input) {
-  search(input)
+  var obj = search(input)
 
-  console.log(found_ops)
+  //console.log(found_ops)
   Object.keys(found_ops).forEach((item) => {
     var dep = ops_dependencies[item]
     if(dep instanceof Array) {
       dep.forEach((name) => {
-
+        if(name[0] == name[0].toUpperCase()) {
+          dependency_class[name] = name
+        } else {
+          dependency_funcs[name] = name
+        }
       })
     }
   })
+
+  var funcs = required_func.concat(Object.keys(dependency_funcs))
+  var clazzes = required_class.concat(Object.keys(dependency_class))
+
+  var buffer = [PREAMBLE]
+
+  write_funcs(funcs, buffer)
+  write_classes(clazzes, buffer)
+  buffer.push(ACTION)
+  obj.write(buffer)
+  buffer.push(ACTION_END, POST)
+
+  console.log(buffer.join(""))
 }
 
 module.exports = writer

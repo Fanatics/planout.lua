@@ -1,15 +1,10 @@
 'use strict'
 var writer = {}
 var EventEmitter = require("./EventEmitter")
-var { OpWriter, GetWriter, SeqOpWriter, CondOpWriter } = require("./OpWriters")
+var { OpWriter, GetWriter, SeqOpWriter, CondOpWriter, LuaCodeWriter } = require("./OpWriters")
 
 const PREAMBLE = `local arguments = {}
-local success, errState = pcall(function()
-  if #KEYS == #ARGV then
-    for i, keyname in ipairs(KEYS) do arguments[keyname: ARGV[i] end
-  end
-end)
-if not success then return cjson.encode(arguments) end
+local arguments = cjson.decode(ARGV[1])
 
 return (function(args)
 `
@@ -25,7 +20,7 @@ const ACTION = `
     local status, err = pcall(function() merge(my_input, var) end)
     if not status then return cjson.encode(err) end
 
-    local user_id_assigment = Assignment:new(my_input['salt'])
+    local assigment = Assignment:new(my_input['salt'])
 `
 
 const ACTION_END = `
@@ -73,9 +68,14 @@ class ValueParser {
   }
 
   write(buffer) {
-    this.writer.beginWrite(buffer)
-    this.children.forEach((child) => child.write(buffer))
-    this.writer.endWrite(buffer)
+    this.writer.write(buffer, this.children)
+  }
+}
+
+class SetParser extends ValueParser {
+  process(val) {
+    val.var = this.settings.var
+    super.process(val)
   }
 }
 
@@ -141,25 +141,29 @@ var RandomNumberParser = MakeMultiNameParser("min", "max", "unit")
 
 function write_funcs(required, buffer) {
   required.forEach((func) => {
-    buffer.push("--", func, "\n")
+    buffer.push("\t--", func, "\n")
   })
 }
 
 function write_classes(required, buffer) {
   required.forEach((className) => {
-    buffer.push("--", className, "\n")
+    buffer.push("\t--", className, "\n")
   })
 }
 
+class LuaEvaluator extends LuaCodeWriter {
+
+}
+
 const ops = {
-  'literal': {'lua-class': "Literal", 'parser': ValueParser},
-  'get': {'lua-class': "Get", 'parser': VarParser},
-  'set': {'lua-class': "Set", 'parser': ValueParser},
-  'seq': {'lua-class': "Seq", 'parser': SequenceParser, 'opWriter': SeqOpWriter},
-  'return': {'lua-class': "Return", 'parser': ValueParser},
-  'index': {'lua-class': "Index", 'parser': ValueParser},
-  'array': {'lua-class': "Arr", 'parser': ValuesParser},
-  'equals': {'lua-class': "Equals", 'parser': BinaryParser},
+  'literal': {'lua-class': LuaEvaluator, 'parser': ValueParser},
+  'get': {'lua-class': LuaEvaluator, 'parser': VarParser},
+  'set': {'lua-class': LuaEvaluator, 'parser': SetParser},
+  'seq': {'lua-class': LuaEvaluator, 'parser': SequenceParser, 'opWriter': SeqOpWriter},
+  'return': {'lua-class': LuaEvaluator, 'parser': ValueParser},
+  'index': {'lua-class': LuaEvaluator, 'parser': ValueParser},
+  'array': {'lua-class': LuaEvaluator, 'parser': ValuesParser},
+  'equals': {'lua-class': LuaEvaluator, 'parser': BinaryParser},
   'and': {'lua-class': "And", 'parser': ValuesParser},
   'or': {'lua-class': "Or", 'parser': ValuesParser},
   '>': {'lua-class': "GreaterThan", 'parser': BinaryParser},
@@ -176,7 +180,7 @@ const ops = {
   'length': {'lua-class': "Length", 'parser': ValueParser},
   'coalesce': {'lua-class': "Coalesce", 'parser': ValuesParser},
   'map': {'lua-class': "Map", 'parser': ValueParser},
-  'cond': {'lua-class': "Cond", 'parser': CondParser, 'opWriter': CondOpWriter},
+  'cond': {'lua-class': LuaEvaluator, 'parser': CondParser, 'opWriter': CondOpWriter},
   'product': {'lua-class': "Product", 'parser': ValuesParser},
   'sum': {'lua-class': "Sum", 'parser': ValuesParser},
   'randomFloat': {'lua-class': "RandomFloat", 'parser': RandomNumberParser},
@@ -222,7 +226,7 @@ function GenParser(settings, op) {
   opers.push(settings)
 
   if(ops[op]) {
-    var opWriter = new (ops[op].opWriter || OpWriter)(settings)
+    var opWriter = new (ops[op].opWriter || OpWriter)(settings, ops[op]['lua-class'])
     var parser = new (ops[op].parser || ValueParser)(settings, opWriter)
     parser.prepare()
     return parser
@@ -260,13 +264,16 @@ writer.parse = function parse(input) {
         }
       })
     }
+
+    if(typeof(ops[item]['lua-class']) === "string") {
+      dependency_class[ops[item]['lua-class']] = ops[item]['lua-class']
+    }
   })
 
   var funcs = required_func.concat(Object.keys(dependency_funcs))
   var clazzes = required_class.concat(Object.keys(dependency_class))
 
   var buffer = [PREAMBLE]
-
   write_funcs(funcs, buffer)
   write_classes(clazzes, buffer)
   buffer.push(ACTION)

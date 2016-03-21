@@ -2,17 +2,11 @@ const Promise = require('bluebird')
 const redis = require('redis')
 const Scripto = require('redis-scripto')
 Promise.promisifyAll(redis.RedisClient.prototype)
-
+const noop = () => {}
 const client = redis.createClient(6379, 'dockerip')
 
 var file = `
-local arguments = {}
-local success, errState = pcall(function()
-  if #KEYS == #ARGV then
-    for i, keyname in ipairs(KEYS) do arguments[keyname] = ARGV[i] end
-  end
-end)
-if not success then return cjson.encode(arguments) end
+local arguments = cjson.decode(ARGV[1])
 
 local shallowcopy = function(orig)
     local orig_type = type(orig)
@@ -46,7 +40,10 @@ end
 
 return (function(args)
   return (function(my_input)
-    local var = cjson.decode(redis.call("get", args['domain']))
+    local doName = "do-" .. args['domain']
+    if args["_do"] ~= nil and redis.call("EXISTS", args["_do"]) == 1 then doName = args["_do"] end
+
+    local var = cjson.decode(redis.call("get", doName))
     local status, err = pcall(function() merge(my_input, var) end)
     if not status then return cjson.encode(err) end
     --PlanOuto script--
@@ -55,31 +52,71 @@ return (function(args)
 
 end)(arguments)`
 
-client.send_commandAsync("script", ["load", file]).then((sha1) => {
-  client.send_commandAsync("keys", [`do-*`])
-    .then((result) => {
-      /*
-      "do-notinasitegroup.com",
-      "do-nflshop.com",
-      "do-fanatics.com"
-      */
-      result.forEach((domainObject) => {
-        client.set(domainObject.replace("do", "plos"), sha1, ()=>{})
-      })
-    }).then(() => {
-      // After script has been loaded into redis
-      client.getAsync("plos-nflshop.com").then((val) => {
-        client.send_commandAsync('evalsha', [val, //SHA1 value
-          3, //Number of arguments
-          // Keys
-          "domain",         "user_id",  "salt",
-          // Values
-          "do-nflshop.com", "123454",   "foo"])
-          .then((result) => {
-            console.log(result)
-          }).catch((err) => {
-            console.log(err)
-          }).finally(() => client.end(true))
-      })
-    })
+var settingsResolver = `
+local arguments = cjson.decode(ARGV[1])
+local result = {}
+local plos = 'plos-' .. arguments['domain']
+local dos = 'do-' .. arguments['domain']
+
+local ws = nil
+if arguments["workspace"] ~= nil then ws = "ws-" .. arguments["workspace"] .. "-" end
+
+if ws ~= nil and redis.call("EXISTS", ws .. plos) == 1 then
+  result["plos"] = redis.call("GET", ws .. plos)
+elseif redis.call("EXISTS", plos) == 1 then
+  result["plos"] = redis.call("GET", plos)
+end
+
+if ws ~= nil and redis.call("EXISTS", ws .. dos) == 1 then
+  result["_do"] = ws .. dos
+elseif redis.call("EXISTS", dos) == 1 then
+  result["_do"] = dos
+end
+
+return cjson.encode(result)
+`
+var context = {
+  "domain": "nflshop.com",
+  "user_id": "123454",
+  "salt": "foo",
+  "app": "iris",
+  "resource": "hp",
+  "workspace": "mgloystein"
+}
+
+client.send_commandAsync("script", ["load", settingsResolver]).then((resolverSha) => {
+  client.set("__settings-resolver", resolverSha, noop)
+
+  client.send_commandAsync("script", ["load", file]).then((sha1) => {
+    client.send_commandAsync("keys", [`do-*`])
+      .then((result) => {
+        /*
+        "do-notinasitegroup.com",
+        "do-nflshop.com",
+        "do-fanatics.com"
+        */
+        result.forEach((domainObject) => {
+          client.set(domainObject.replace("do", "plos"), sha1, noop)
+        })
+      }).then(() => {
+        // After script has been loaded into redis
+        client.getAsync("__settings-resolver").then((resolverSha) => {
+          client.send_commandAsync('evalsha', [resolverSha, 1, "context", JSON.stringify(context)])
+            .then((result) => {
+              result = JSON.parse(result)
+              context["_do"] = result["_do"]
+              console.log(result)
+              client.getAsync(result.plos).then((shaval) => {
+
+                client.send_commandAsync('evalsha', [shaval, 1, "context", JSON.stringify(context)])
+                  .then((result) => {
+                    console.log(result)
+                  }).catch((err) => {
+                    console.log(err)
+                  }).finally(() => client.end(true))
+              })
+            })
+          })
+        })
+  })
 })

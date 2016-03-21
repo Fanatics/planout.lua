@@ -85,6 +85,7 @@ var context = {
 
 client.send_commandAsync("script", ["load", settingsResolver]).then((resolverSha) => {
   client.set("__settings-resolver", resolverSha, noop)
+  client.set("__settings-resolver-src", settingsResolver, noop)
 
   client.send_commandAsync("script", ["load", file]).then((sha1) => {
     client.send_commandAsync("keys", [`do-*`]).then((domains) => {
@@ -95,6 +96,7 @@ client.send_commandAsync("script", ["load", settingsResolver]).then((resolverSha
       */
       domains.forEach((domainObject) => {
         client.set(domainObject.replace("do", "plos"), sha1, noop)
+        client.set(domainObject.replace("do", "plos") + "-src", file, noop)
       })
     }).then(() => {
       // After script has been loaded into redis

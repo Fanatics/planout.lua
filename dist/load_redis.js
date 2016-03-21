@@ -88,31 +88,30 @@ client.send_commandAsync("script", ["load", settingsResolver]).then((resolverSha
   client.set("__settings-resolver", resolverSha, noop)
 
   client.send_commandAsync("script", ["load", file]).then((sha1) => {
-    client.send_commandAsync("keys", [`do-*`])
-      .then((result) => {
-        /*
-        "do-notinasitegroup.com",
-        "do-nflshop.com",
-        "do-fanatics.com"
-        */
-        result.forEach((domainObject) => {
-          client.set(domainObject.replace("do", "plos"), sha1, noop)
-        })
-      }).then(() => {
-        // After script has been loaded into redis
-        client.getAsync("__settings-resolver").then((resolverSha) => {
-          client.send_commandAsync('evalsha', [resolverSha, 1, "context", JSON.stringify(context)])
-            .then((result) => {
-              result = JSON.parse(result)
-              context["_do"] = result["_do"]
-              client.send_commandAsync('evalsha', [result.plos, 1, "context", JSON.stringify(context)])
-                .then((result) => {
-                  console.log(result)
-                }).catch((err) => {
-                  console.log(err)
-                }).finally(() => client.end(true))
-            })
+    client.send_commandAsync("keys", [`do-*`]).then((result) => {
+      /*
+      "do-notinasitegroup.com",
+      "do-nflshop.com",
+      "do-fanatics.com"
+      */
+      result.forEach((domainObject) => {
+        client.set(domainObject.replace("do", "plos"), sha1, noop)
+      })
+    }).then(() => {
+      // After script has been loaded into redis
+      client.getAsync("__settings-resolver").then((resolverSha) => {
+        client.send_commandAsync('evalsha', [resolverSha, 1, "context", JSON.stringify(context)])
+          .then((result) => {
+            result = JSON.parse(result)
+            context["_do"] = result["_do"]
+            client.send_commandAsync('evalsha', [result.plos, 1, "context", JSON.stringify(context)])
+              .then((result) => {
+                console.log(result)
+              }).catch((err) => {
+                console.log(err)
+              }).finally(() => client.end(true))
           })
-        })
+      })
+    })
   })
 })

@@ -1,6 +1,5 @@
 const Promise = require('bluebird')
 const redis = require('redis')
-const Scripto = require('redis-scripto')
 Promise.promisifyAll(redis.RedisClient.prototype)
 const noop = () => {}
 const client = redis.createClient(6379, 'dockerip')
@@ -56,7 +55,7 @@ var settingsResolver = `
 local arguments = cjson.decode(ARGV[1])
 local result = {}
 local plos = 'plos-' .. arguments['domain']
-local dos = 'do-' .. arguments['domain']
+local dos = 'do-' .. arguments['domain'] .. '-' .. arguments['app'] .. "-" .. arguments['resource']
 
 local ws = nil
 if arguments["workspace"] ~= nil then ws = "ws-" .. arguments["workspace"] .. "-" end

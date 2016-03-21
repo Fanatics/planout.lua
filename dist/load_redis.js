@@ -75,7 +75,7 @@ end
 return cjson.encode(result)
 `
 var context = {
-  "domain": "nflshop.com",
+  "domain": "fanatics.com",
   "user_id": "123454",
   "salt": "foo",
   "app": "iris",
@@ -87,13 +87,13 @@ client.send_commandAsync("script", ["load", settingsResolver]).then((resolverSha
   client.set("__settings-resolver", resolverSha, noop)
 
   client.send_commandAsync("script", ["load", file]).then((sha1) => {
-    client.send_commandAsync("keys", [`do-*`]).then((result) => {
+    client.send_commandAsync("keys", [`do-*`]).then((domains) => {
       /*
       "do-notinasitegroup.com",
       "do-nflshop.com",
       "do-fanatics.com"
       */
-      result.forEach((domainObject) => {
+      domains.forEach((domainObject) => {
         client.set(domainObject.replace("do", "plos"), sha1, noop)
       })
     }).then(() => {

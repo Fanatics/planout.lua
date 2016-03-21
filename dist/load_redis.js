@@ -105,16 +105,12 @@ client.send_commandAsync("script", ["load", settingsResolver]).then((resolverSha
             .then((result) => {
               result = JSON.parse(result)
               context["_do"] = result["_do"]
-              console.log(result)
-              client.getAsync(result.plos).then((shaval) => {
-
-                client.send_commandAsync('evalsha', [shaval, 1, "context", JSON.stringify(context)])
-                  .then((result) => {
-                    console.log(result)
-                  }).catch((err) => {
-                    console.log(err)
-                  }).finally(() => client.end(true))
-              })
+              client.send_commandAsync('evalsha', [result.plos, 1, "context", JSON.stringify(context)])
+                .then((result) => {
+                  console.log(result)
+                }).catch((err) => {
+                  console.log(err)
+                }).finally(() => client.end(true))
             })
           })
         })

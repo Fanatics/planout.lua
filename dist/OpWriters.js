@@ -59,6 +59,7 @@ class CondOpWriter extends OpWriter {
     var id = this.instanceId
     var result = `my_input['specific_goal']`
     buffer.push(`
+      
     local cond_${id} = ${result}
     if cond_${id} and cond_${id} ~=0 then`)
   }
@@ -92,6 +93,7 @@ class LuaCodeFinder extends LuaCodeWriter {
     const operation = this.luaOp
     const children = this.evaluateChildren(childList)
     return `
+
     assigment:set('${variable}', ${operation}:new({
       ${children}
     }))

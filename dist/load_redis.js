@@ -98,21 +98,23 @@ client.send_commandAsync("script", ["load", settingsResolver]).then((resolverSha
         client.set(domainObject.replace("do", "plos"), sha1, noop)
         client.set(domainObject.replace("do", "plos") + "-src", file, noop)
       })
-    }).then(() => {
-      // After script has been loaded into redis
-      client.getAsync("__settings-resolver").then((resolverSha) => {
-        client.send_commandAsync('evalsha', [resolverSha, 1, "context", JSON.stringify(context)])
-          .then((result) => {
-            result = JSON.parse(result)
-            context["_do"] = result["_do"]
-            client.send_commandAsync('evalsha', [result.plos, 1, "context", JSON.stringify(context)])
-              .then((result) => {
-                console.log(result)
-              }).catch((err) => {
-                console.log(err)
-              }).finally(() => client.end(true))
-          })
-      })
+    }).then((domains) => {
+      console.log(domains)
     })
   })
+})
+  // After script has been loaded into redis
+client.getAsync("__settings-resolver").then((resolverSha) => {
+  client.send_commandAsync('evalsha', [resolverSha, 1, "context", JSON.stringify(context)])
+    .then((result) => {
+      result = JSON.parse(result)
+      context["_do"] = result["_do"]
+      console.log(result.plos)
+      client.send_commandAsync('evalsha', [result.plos, 1, "context", JSON.stringify(context)])
+        .then((result) => {
+          console.log(result)
+        }).catch((err) => {
+          console.log(err)
+        }).finally(() => client.end(true))
+    })
 })

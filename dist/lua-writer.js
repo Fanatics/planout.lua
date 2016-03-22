@@ -15,13 +15,15 @@ end)(arguments)
 
 const ACTION = `
   return (function(my_input)
-    local var = cjson.decode(redis.call("get", args['domain']))
+  local doName = "do-" .. args['domain']
+  if args["_do"] ~= nil and redis.call("EXISTS", args["_do"]) == 1 then doName = args["_do"] end
+
+  local var = cjson.decode(redis.call("get", doName))
 
     local status, err = pcall(function() merge(my_input, var) end)
     if not status then return cjson.encode(err) end
 
-    local assigment = Assignment:new(my_input['salt'])
-`
+    local assigment = Assignment:new(my_input['salt'])`
 
 const ACTION_END = `
     return cjson.encode(my_input)

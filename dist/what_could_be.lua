@@ -325,3 +325,24 @@ return (function(args)
   end)(args)
 
 end)(arguments)
+
+local result = {}
+local plos = 'plos-' .. arguments['domain']
+local dos = 'do-se-' .. arguments['domain']
+
+local ws = nil
+if arguments["workspace"] ~= nil then ws = "ws-" .. arguments["workspace"] .. "-"
+
+if ws ~= nil and redis.call("EXISTS", ws .. plos) == 1 then
+  result["plos"] = redis.get(ws .. plos)
+elseif redis.call("EXISTS", plos) == 1 then
+  result["plos"] = redis.get(plos)
+end
+
+if ws ~= nil and redis.call("EXISTS", ws .. dos) == 1 then
+  result["_do"] = ws .. dos
+elseif redis.call("EXISTS", dos) == 1 then
+  result["_do"] = dos
+end
+
+return cjson.encode(result)

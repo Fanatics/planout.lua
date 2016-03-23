@@ -1,7 +1,7 @@
 'use strict'
 var writer = {}
 var EventEmitter = require("./EventEmitter")
-var { OpWriter, GetWriter, SeqOpWriter, CondOpWriter, LuaCodeWriter } = require("./OpWriters")
+var { OpWriter, GetWriter, SeqOpWriter, CondOpWriter, LuaCodeWriter, SetWriter } = require("./OpWriters")
 
 const PREAMBLE = `local arguments = {}
 local arguments = cjson.decode(ARGV[1])
@@ -50,7 +50,6 @@ class ValueParser {
   constructor(settings, writer) {
     this.settings = settings
     this.writer = writer
-    this.children = []
   }
 
   getPropertyName() {
@@ -60,24 +59,30 @@ class ValueParser {
   prepare() {
     var val = this.settings[this.getPropertyName()]
 
-    this.process(val)
+    this.setProps(this.process(val))
+  }
+
+  setProps(item) {
+    this.writer.setProp(this.getPropertyName(), item)
   }
 
   process(val) {
     if(val && val.op) {
-      this.children.push(search(val))
+      return search(val)
+    } else {
+      return val
     }
   }
 
   write(buffer) {
-    this.writer.write(buffer, this.children)
+    this.writer.write(buffer)
   }
 }
 
 class SetParser extends ValueParser {
   process(val) {
     val.var = this.settings.var
-    super.process(val)
+    return super.process(val)
   }
 }
 
@@ -94,7 +99,7 @@ class ValuesParser extends ValueParser {
 
   process(val) {
     if(val instanceof Array) {
-        val.forEach((item) => super.process(item))
+      return val.map((item) => super.process(item))
     }
   }
 }
@@ -109,8 +114,12 @@ class MultiNameParser extends ValueParser {
   prepare() {
     var property = this.getPropertyName()
     property.forEach((prop) => {
-      this.process(this.settings[prop])
+      this.setProps(this.process(this.settings[prop]), prop)
     })
+  }
+
+  setProps(item, propName) {
+    this.writer.setProp(propName, item)
   }
 }
 
@@ -121,10 +130,11 @@ class CondParser extends ValueParser {
 
   process(val) {
     if(val instanceof Array) {
-        val.forEach((item) => {
-          this.ifCond = search(item.if)
-          this.thenAction = search(item.then)
-        })
+      return val.map((item) => {
+        let ifCond = search(item.if)
+        let thenAction = search(item.then)
+        return { ifCond, thenAction }
+      })
     }
   }
 }
@@ -154,17 +164,37 @@ function write_classes(required, buffer) {
 }
 
 class LuaEvaluator extends LuaCodeWriter {
+  writeStandard(item) {
 
+  }
+}
+
+class ArrayEvaluator extends LuaCodeWriter {
+  writeStandard(item) {
+
+    return "{" + this.properties.values.map((val) => {
+      if(typeof(val) === "object" &&
+        typeof(val.write) === "function" ) {
+
+        let tempBuff = []
+        val.write(tempBuff)
+
+        return tempBuff.join()
+      } else {
+        return JSON.stringify(val)
+      }
+    }).join(",") + "}";
+  }
 }
 
 const ops = {
   'literal': {'lua-class': LuaEvaluator, 'parser': ValueParser},
-  'get': {'lua-class': LuaEvaluator, 'parser': VarParser},
-  'set': {'lua-class': LuaEvaluator, 'parser': SetParser},
+  'get': {'lua-class': LuaEvaluator, 'parser': VarParser, 'opWriter': GetWriter},
+  'set': {'lua-class': LuaEvaluator, 'parser': SetParser, 'opWriter': SetWriter},
   'seq': {'lua-class': LuaEvaluator, 'parser': SequenceParser, 'opWriter': SeqOpWriter},
   'return': {'lua-class': LuaEvaluator, 'parser': ValueParser},
   'index': {'lua-class': LuaEvaluator, 'parser': ValueParser},
-  'array': {'lua-class': LuaEvaluator, 'parser': ValuesParser},
+  'array': {'lua-class': ArrayEvaluator, 'parser': ValuesParser},
   'equals': {'lua-class': LuaEvaluator, 'parser': BinaryParser},
   'and': {'lua-class': "And", 'parser': ValuesParser},
   'or': {'lua-class': "Or", 'parser': ValuesParser},
@@ -281,8 +311,9 @@ writer.parse = function parse(input) {
   buffer.push(ACTION)
   obj.write(buffer)
   buffer.push(ACTION_END, POST)
-
+  //console.log(require('util').inspect(obj, true, 20))
   console.log(buffer.join(""))
+  return buffer.join("")
 }
 
 module.exports = writer

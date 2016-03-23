@@ -1,4 +1,3 @@
-const Promise = require('bluebird')
 const fs = require('fs')
 const writer = require("./lua-writer")
 
@@ -79,4 +78,7 @@ const input = {
     }
   ]
 }
-writer.parse(input)
+fs.writeFile('temp.lua', writer.parse(input), (err) => {
+  if (err) throw err;
+  console.log('Wrote temp.lua');
+});

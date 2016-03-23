@@ -311,8 +311,6 @@ writer.parse = function parse(input) {
   buffer.push(ACTION)
   obj.write(buffer)
   buffer.push(ACTION_END, POST)
-  //console.log(require('util').inspect(obj, true, 20))
-  console.log(buffer.join(""))
   return buffer.join("")
 }
 

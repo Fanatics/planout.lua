@@ -6,7 +6,8 @@ dependencies:
     - sudo luarocks install luafilesystem
     - sudo luarocks install penlight
     - sudo luarocks install lbc
+    - sudo luarocks install cjson
     - sudo luarocks install underscore.lua --from=http://marcusirven.s3.amazonaws.com/rocks/
 test:
   override:
-    - cd tests && lua test.lua -v 
+    - cd tests && lua test.lua -v

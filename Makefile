@@ -4,6 +4,7 @@ planout:
 install:
 	luarocks install penlight
 	luarocks install lbc
+	luarocks install cjson
 	luarocks install underscore.lua --from=http://marcusirven.s3.amazonaws.com/rocks/
 
 test:

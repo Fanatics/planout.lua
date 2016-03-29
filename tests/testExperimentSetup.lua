@@ -1,9 +1,8 @@
 package.path = package.path .. ";../src/?.lua;"
-require('experimentSetup')
-require('namespace')
-local Experiment = require "experiment"
-
-local pretty = require 'pl.pretty'
+local setup = require('experimentSetup')
+local namespace = require('namespace')
+local Experiment = require('experiment')
+local random = require('ops.random')
 
 EXPORT_ASSERT_TO_GLOBALS = true
 require("resources.luaunit")
@@ -44,7 +43,7 @@ end
 local SetupExperiment1 = SetupBaseExperiment:new()
 
 function SetupExperiment1:assign(params, args)
-  params:set('foo', UniformChoice:new({['choices'] = {'a','b'}, ['unit'] = args['userid']}))
+  params:set('foo', random.UniformChoice:new({['choices'] = {'a','b'}, ['unit'] = args['userid']}))
   params:set('paramVal', args.paramVal)
   params:set('funcVal', args.funcVal)
 end
@@ -52,12 +51,12 @@ end
 local SetupExperiment2 = SetupBaseExperiment:new()
 
 function SetupExperiment2:assign(params, args)
-  params:set('foobar', UniformChoice:new({['choices'] = {'a','b'}, ['unit'] = args['userid']}))
+  params:set('foobar', random.UniformChoice:new({['choices'] = {'a','b'}, ['unit'] = args['userid']}))
   params:set('paramVal', args.paramVal)
   params:set('funcVal', args.funcVal)
 end
 
-local SetupBaseTestNamespace = SimpleNamespace:new()
+local SetupBaseTestNamespace = namespace.SimpleNamespace:new()
 
 function SetupBaseTestNamespace:setup()
   self:setName('testThis')
@@ -78,16 +77,16 @@ function TestExperimentSetup:test_works_with_global_inputs()
   local fooVal = namespace:get('foo')
   local foobarVal = namespace:get('foobar')
   local namespace2 = SetupBaseTestNamespace:new({['userid'] = 'a'})
-  registerExperimentInput('userid', 'a')
+  setup.registerExperimentInput('userid', 'a')
   assert(namespace2:get('foo') == fooVal)
   assert(namespace2:get('foobar') == foobarVal)
 
-  clearExperimentInput('userid')
+  setup.clearExperimentInput('userid')
 end
 
 function TestExperimentSetup:test_works_with_scoped_inputs()
   local namespace = SetupBaseTestNamespace:new({['userid'] = 'a'})
-  registerExperimentInput('paramVal', '3', namespace:getName())
+  setup.registerExperimentInput('paramVal', '3', namespace:getName())
 
   assert(namespace:get('paramVal') == '3')
 
@@ -107,6 +106,6 @@ end
 
 function TestExperimentSetup:test_works_with_function_inputs()
   local namespace = SetupBaseTestNamespace:new({['userid'] = 'a'})
-  registerExperimentInput('funcVal', function() return '3' end)
+  setup.registerExperimentInput('funcVal', function() return '3' end)
   assert(namespace:get('funcVal') == '3')
 end

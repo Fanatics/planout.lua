@@ -1,15 +1,14 @@
 package.path = package.path .. ';../src/?.lua;'
 
-local Experiment = require "experiment"
-local pretty = require 'pl.pretty'
-
-require("namespace")
+local Experiment = require('experiment')
+local utils = require('lib.utils')
+local namespace = require('namespace')
+local setup = require('experimentSetup')
 
 EXPORT_ASSERT_TO_GLOBALS = true
 require('resources.luaunit')
 
 TestNamespace = {}
-TestNamespace2 = {}
 
 local NSBaseExperiment = Experiment:new()
 
@@ -64,7 +63,7 @@ function NSExperiment3:assign(params, args)
 end
 
 
-local NSBaseTestNamespace = SimpleNamespace:new()
+local NSBaseTestNamespace = namespace.SimpleNamespace:new()
 
 function NSBaseTestNamespace:setup()
   self:setName('test')
@@ -227,7 +226,7 @@ end
 function TestNamespace:test_works_with_dynamic_get_parameter_names()
   local ExperimentParamTest = NSExperiment1:new()
   function ExperimentParamTest:assign(params, args)
-    local clonedArgs = shallowcopy(args)
+    local clonedArgs = utils.shallowcopy(args)
     clonedArgs.userid = nil
     for k, v in pairs(clonedArgs) do
       params:set(k, 1)
@@ -303,7 +302,7 @@ function TestNamespace:test_works_with_experiment_setup()
   end
 
   local ns = TestNamespace:new({['foo'] = 1, ['bar'] = 1})
-  registerExperimentInput('userid', 'hi')
+  setup.registerExperimentInput('userid', 'hi')
 
   assert(ns:get("test") == 1)
   assert(#ns:getLog() == 1)
@@ -326,7 +325,7 @@ function TestNamespace:test_works_as_expected()
   local total = 10000
   local index = 0
   while index < total do
-    registerExperimentInput('userid', index)
+    setup.registerExperimentInput('userid', index)
     local ns = TestNamespaces:new({})
     if ns:get('test') ~= nil then count = count + 1 end
     index = index + 1

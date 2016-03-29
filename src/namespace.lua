@@ -1,12 +1,11 @@
-require("lib.utils")
-require("ops.random")
-require("experimentSetup")
-local pretty = require 'pl.pretty'
+local utils = require("lib.utils")
+local random = require("ops.random")
+local setup = require("experimentSetup")
 
 local Experiment = require "experiment"
 local Assignment = require "assignment"
 
-DefaultExperiment = Experiment:new()
+local DefaultExperiment = Experiment:new()
 
 function DefaultExperiment:configureLogger()
   return
@@ -33,10 +32,10 @@ function DefaultExperiment:assign(params, args)
 end
 
 
-Namespace = {}
+local Namespace = {}
 
 function Namespace:new(args)
-  return _new_(self, {}):init(args)
+  return utils._new_(self, {}):init(args)
 end
 
 function Namespace:init(args) return self end
@@ -82,7 +81,7 @@ function Namespace:requireDefaultExperiment()
 end
 
 
-SimpleNamespace = Namespace:new()
+local SimpleNamespace = Namespace:new()
 
 function SimpleNamespace:init(args)
   if args ~= nil then
@@ -98,8 +97,8 @@ function SimpleNamespace:init(args)
 
     self:setupDefaults();
     self:setup();
-    self.availableSegments = range(self.numSegments)
-    self.segmentAllocations = range(self.numSegments)
+    self.availableSegments = utils.range(self.numSegments)
+    self.segmentAllocations = utils.range(self.numSegments)
     for i, v in ipairs(self.segmentAllocations) do self.segmentAllocations[i] = -1 end
     self:setupExperiments();
   end
@@ -146,7 +145,7 @@ function SimpleNamespace:addExperiment(name, expObject, segments)
       table.insert(newSample, i)
     end
   end
-  a:set('sampled_segments', Sample:new({
+  a:set('sampled_segments', random.Sample:new({
     ['choices'] = newSample,
     ['draws'] = segments,
     ['unit'] = name
@@ -176,7 +175,7 @@ end
 
 function SimpleNamespace:getSegment()
   local a = Assignment:new(self.name)
-  local segment = RandomInteger:new({
+  local segment = random.RandomInteger:new({
     ['min'] = 0,
     ['max'] = self.numSegments - 1,
     ['unit'] = self.inputs[self:getPrimaryUnit()] or ''
@@ -191,7 +190,7 @@ function SimpleNamespace:getDefaultNamespaceName()
 end
 
 function SimpleNamespace:_assignExperiment()
-  self.inputs = table.merge(self.inputs or {}, getExperimentInputs(self:getName()))
+  self.inputs = table.merge(self.inputs or {}, setup.getExperimentInputs(self:getName()))
   local segment = self:getSegment()
   if self.segmentAllocations[segment] ~= -1 then
     self.currentSegment = segment
@@ -285,3 +284,9 @@ function SimpleNamespace:logEvent(eventType, extras)
   if self._experiment ~= nil then return self:logEvent(eventType, extras) end
   return nil
 end
+
+return {
+  SimpleNamespace = SimpleNamespace,
+  Namespace = Namespace,
+  DefaultExperiment = DefaultExperiment
+}

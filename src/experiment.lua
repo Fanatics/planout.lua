@@ -1,12 +1,11 @@
-require("lib.utils")
-local JSON = require "lib.JSON"
+local utils = require("lib.utils")
+local cjson = require "cjson"
 local Assignment = require "assignment"
 
-local pretty = require 'pl.pretty'
 local Experiment = {}
 
 function Experiment:new(inputs)
-  return _new_(self, {}):init(inputs)
+  return utils._new_(self, {}):init(inputs)
 end
 
 function Experiment:init(inputs)
@@ -139,7 +138,7 @@ end
 function Experiment:toString()
   self:requireAssignment()
   self:requireExposureLogging()
-  return JSON:encode(self:__asBlob())
+  return cjson.encode(self:__asBlob())
 end
 
 function Experiment:logExposure(extras)
@@ -157,7 +156,7 @@ function Experiment:logEvent(eventType, extras)
   if not self:inExperiment() then return end
   local extraPayload = {
     event = eventType,
-    extras_data = shallowcopy(extras)
+    extras_data = utils.shallowcopy(extras)
   }
 
   self:log(self:__asBlob(extraPayload))
@@ -174,8 +173,5 @@ end
 function Experiment:previouslyLogged()
   error "Not implemented"
 end
-
-local exp = Experiment:new({})
-
 
 return Experiment

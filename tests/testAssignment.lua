@@ -1,6 +1,6 @@
 package.path = package.path .. ";../src/?.lua;"
 local Assignment = require "assignment"
-require("ops.random")
+local random = require("ops.random")
 
 EXPORT_ASSERT_TO_GLOBALS = true
 require("resources.luaunit")
@@ -20,9 +20,9 @@ function TestAssignment:test_work_with_uniform_choice()
   local a = Assignment:new(testerSalt)
   local choices = {"a", "b"}
 
-  a:set('foo', UniformChoice:new({['choices'] = choices, ['unit'] = testerUnit}))
-  a:set('bar', UniformChoice:new({['choices'] = choices, ['unit'] = testerUnit}))
-  a:set('baz', UniformChoice:new({['choices'] = choices, ['unit'] = testerUnit}))
+  a:set('foo', random.UniformChoice:new({['choices'] = choices, ['unit'] = testerUnit}))
+  a:set('bar', random.UniformChoice:new({['choices'] = choices, ['unit'] = testerUnit}))
+  a:set('baz', random.UniformChoice:new({['choices'] = choices, ['unit'] = testerUnit}))
 
   assert(a:get('foo') == "b")
   assert(a:get('bar') == "a")

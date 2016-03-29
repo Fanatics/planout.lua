@@ -1,18 +1,18 @@
-require("lib.utils")
-JSON = require "lib.JSON"
-local pretty = require 'pl.pretty'
+local utils = require("lib.utils")
+local random = require("ops.random")
+local cjson = require "cjson"
 
-Assignment = {}
+local Assignment = {}
 
 function Assignment:new(experimentSalt, overrides)
-  return _new_(self, {}):init(experimentSalt, overrides)
+  return utils._new_(self, {}):init(experimentSalt, overrides)
 end
 
 function Assignment:init(experimentSalt, overrides)
   if type(overrides) ~= "table" then overrides = {} end
   self.experimentSalt = experimentSalt
-  self.overrides = shallowcopy(overrides)
-  self.data = shallowcopy(overrides)
+  self.overrides = utils.shallowcopy(overrides)
+  self.data = utils.shallowcopy(overrides)
   return self
 end
 
@@ -30,7 +30,7 @@ function Assignment:addOverride(key, value)
 end
 
 function Assignment:setOverrides(overrides)
-  self.overrides = shallowcopy(overrides)
+  self.overrides = utils.shallowcopy(overrides)
   for k, v in pairs(self.overrides) do self.data[k] = v end
 end
 
@@ -40,7 +40,7 @@ function Assignment:set(name, value)
   elseif name == "experimentSalt" then self.experimentSalt = value return end
 
   if self.overrides[name] ~= nil then return end
-  if instanceOf(value, PlanOutOpRandom) then
+  if utils.instanceOf(value, random.PlanOutOpRandom) then
     if value.args.salt == nil then value.args.salt = name end
     self.data[name] = value:execute(self)
   else
@@ -64,11 +64,11 @@ function Assignment:del(name)
 end
 
 function Assignment:toString()
-  return JSON:encode(self.data)
+  return cjson.encode(self.data)
 end
 
 function Assignment:length()
-  return tablelength(self.data)
+  return utils.tablelength(self.data)
 end
 
 return Assignment

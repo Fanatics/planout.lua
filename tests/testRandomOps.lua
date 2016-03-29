@@ -1,14 +1,12 @@
 package.path = package.path .. ";../src/?.lua;"
-require("ops.random")
-local pretty = require 'pl.pretty'
+local random = require("ops.random")
 -- included this for stuff like map, reduce, join.
-_ = require 'underscore'
+local _ = require 'underscore'
 local Assignment = require "assignment"
 EXPORT_ASSERT_TO_GLOBALS = true
 require("resources.luaunit")
 
 TestRandomOps = {}
-TestRandomOps2 = {}
 
 local z = 3.29
 
@@ -62,23 +60,23 @@ function TestRandomOps:test_salts_correctly()
   local i = 20;
   local a = Assignment:new("assign_salt_a")
 
-  a:set('x', RandomInteger:new({['min'] = 0, ['max'] = 100000, ['unit'] = i }))
-  a:set('y', RandomInteger:new({['min'] = 0, ['max'] = 100000, ['unit'] = i }))
+  a:set('x', random.RandomInteger:new({['min'] = 0, ['max'] = 100000, ['unit'] = i }))
+  a:set('y', random.RandomInteger:new({['min'] = 0, ['max'] = 100000, ['unit'] = i }))
   assert(a:get('x') ~= a:get('y'))
 
-  a:set('z', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['salt'] = 'x'}))
+  a:set('z', random.RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['salt'] = 'x'}))
   assert(a:get('x') == a:get('z'));
 
   local b = Assignment:new('assign_salt_b');
-  b:set('x', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i}));
+  b:set('x', random.RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i}));
   assert(a:get('x') ~= b:get('x'));
 
-  a:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs'}))
-  b:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs'}))
+  a:set('f', random.RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs'}))
+  b:set('f', random.RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs'}))
   assert(a:get('f') == b:get('f'));
 
-  a:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs2'}))
-  b:set('f', RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs2'}))
+  a:set('f', random.RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs2'}))
+  b:set('f', random.RandomInteger:new({ ['min'] = 0, ['max'] = 100000, ['unit'] = i, ['full_salt'] = 'fs2'}))
   assert(a:get('f') == b:get('f'));
 end
 
@@ -88,7 +86,7 @@ function TestRandomOps:test_works_for_bernoulli_trials()
     local xs = {}
     for i=0, N do
       local a = Assignment:new(p)
-      a:set('x', BernoulliTrial:new({['p'] = p, ['unit'] = i }))
+      a:set('x', random.BernoulliTrial:new({['p'] = p, ['unit'] = i }))
       xs[i] = a:get('x')
     end
     return xs
@@ -106,7 +104,7 @@ function TestRandomOps:test_works_for_uniform_choice()
     local xs = {}
     for i=0, N do
       local a = Assignment:new(_.join(choices, ','))
-      a:set('x', UniformChoice:new({ ['choices'] = choices, ['unit'] = i}))
+      a:set('x', random.UniformChoice:new({ ['choices'] = choices, ['unit'] = i}))
       xs[i] = a:get('x')
     end
     return xs
@@ -131,7 +129,7 @@ function TestRandomOps:test_works_for_weighted_choice()
     local choices = _.map(choose, function(choice) for k,v in pairs(choice) do return k end end)
     for i=0, N do
       local a = Assignment:new(_.join(weights, ', '))
-      a:set('x', WeightedChoice:new({['choices'] = choices, ['weights'] = weights, ['unit'] = i }))
+      a:set('x', random.WeightedChoice:new({['choices'] = choices, ['weights'] = weights, ['unit'] = i }))
       xs[i] = a:get('x')
     end
     return xs
@@ -161,7 +159,7 @@ function TestRandomOps:test_works_for_sample()
     local xs = {}
     for i=0, N do
       local a = Assignment:new(_.join(choices, ', '))
-      a:set('x', Sample:new({['choices'] = choices, ['draws'] = draws, ['unit'] = i}))
+      a:set('x', random.Sample:new({['choices'] = choices, ['draws'] = draws, ['unit'] = i}))
       xs[i] = a:get('x')
     end
     return xs
@@ -206,7 +204,7 @@ function TestRandomOps:test_works_for_efficient_sample()
   local draws = 5
 
   local a = Assignment:new(_.join(choices, ', '))
-  a:set('x', Sample:new({['choices'] = choices, ['draws'] = draws, ['unit'] = '1'}))
+  a:set('x', random.Sample:new({['choices'] = choices, ['draws'] = draws, ['unit'] = '1'}))
   local x = a:get('x')
   assert(#x == 5)
 end

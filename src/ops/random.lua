@@ -1,16 +1,14 @@
 package.path = package.path .. ";../?.lua"
-require("lib.utils")
-require("ops.base")
+local utils = require("lib.utils")
+local base = require("ops.base")
 local bc = require "bc"
+local sha1hex = redis and redis.sha1hex or require("lib.sha1")
 
-local sha1 = require "lib.sha1"
-local pretty = require 'pl.pretty'
-
-PlanOutOpRandom = PlanOutOpSimple:new()
+local PlanOutOpRandom = base.PlanOutOpSimple:new()
 
 function PlanOutOpRandom:init(args)
   self.args = args
-  self.LONG_SCALE = hex2bc("FFFFFFFFFFFFFFF");
+  self.LONG_SCALE = utils.hex2bc("FFFFFFFFFFFFFFF");
   return self
 end
 
@@ -36,16 +34,16 @@ function PlanOutOpRandom:getHash(appendedUnit)
     fullSalt = self.mapper:get('experimentSalt') .. "." .. salt
   end
 
-  local unitStr = table.concat(map(self:getUnit(appendedUnit), function (val)
+  local unitStr = table.concat(utils.map(self:getUnit(appendedUnit), function (val)
     return val .. ""
   end), ".")
   local hashStr = fullSalt .. "." .. unitStr
-  local hash = sha1(hashStr)
-  return hex2bc(string.sub(hash, 0, 15))
+  local hash = sha1hex(hashStr)
+  return utils.hex2bc(string.sub(hash, 0, 15))
 end
 
 
-RandomFloat = PlanOutOpRandom:new()
+local RandomFloat = PlanOutOpRandom:new()
 
 function RandomFloat:simpleExecute()
   local minVal = self:getArgNumber('min');
@@ -54,7 +52,7 @@ function RandomFloat:simpleExecute()
 end
 
 
-RandomInteger = PlanOutOpRandom:new()
+local RandomInteger = PlanOutOpRandom:new()
 
 function RandomInteger:simpleExecute()
   local minVal = self:getArgNumber('min');
@@ -63,7 +61,7 @@ function RandomInteger:simpleExecute()
 end
 
 
-BernoulliTrial = PlanOutOpRandom:new()
+local BernoulliTrial = PlanOutOpRandom:new()
 
 function BernoulliTrial:simpleExecute()
   local p = self:getArgNumber('p');
@@ -72,7 +70,7 @@ function BernoulliTrial:simpleExecute()
 end
 
 
-BernoulliFilter = PlanOutOpRandom:new()
+local BernoulliFilter = PlanOutOpRandom:new()
 
 function BernoulliFilter:simpleExecute()
   local p = self:getArgNumber('p');
@@ -88,7 +86,7 @@ function BernoulliFilter:simpleExecute()
 end
 
 
-UniformChoice = PlanOutOpRandom:new()
+local UniformChoice = PlanOutOpRandom:new()
 
 function UniformChoice:simpleExecute()
   local values = self:getArgList('choices')
@@ -98,7 +96,7 @@ function UniformChoice:simpleExecute()
 end
 
 
-WeightedChoice = PlanOutOpRandom:new()
+local WeightedChoice = PlanOutOpRandom:new()
 
 function WeightedChoice:simpleExecute()
   local values = self:getArgList('choices')
@@ -119,7 +117,7 @@ function WeightedChoice:simpleExecute()
 end
 
 
-Sample = PlanOutOpRandom:new()
+local Sample = PlanOutOpRandom:new()
 
 function Sample:sample(array, numDraws)
   for i = #array, 1, -1 do
@@ -133,9 +131,20 @@ function Sample:sample(array, numDraws)
 end
 
 function Sample:simpleExecute()
-  local values = shallowcopy(self:getArgList('choices'))
+  local values = utils.shallowcopy(self:getArgList('choices'))
   local numDraws = 0
   if self.args.draws ~= nil then numDraws = self:getArgNumber('draws')
   else numDraws = #values end
   return self:sample(values, numDraws)
 end
+
+return {
+  Sample = Sample,
+  WeightedChoice = WeightedChoice,
+  UniformChoice = UniformChoice,
+  BernoulliFilter = BernoulliFilter,
+  BernoulliTrial = BernoulliTrial,
+  RandomInteger = RandomInteger,
+  RandomFloat = RandomFloat,
+  PlanOutOpRandom = PlanOutOpRandom
+}

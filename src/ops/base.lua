@@ -1,9 +1,10 @@
 package.path = package.path .. ";../?.lua"
-require("lib.utils")
-local pretty = require 'pl.pretty'
+local utils = require("lib.utils")
+local cjson = require "cjson"
 
+local _new_ = utils._new_
 -- Base PlanOut object --
-PlanOutOp = {}
+local PlanOutOp = {}
 
 function PlanOutOp:new(args)
   return _new_(self, {}):init(args)
@@ -19,7 +20,7 @@ function PlanOutOp:execute(mapper)
 end
 
 function PlanOutOp:dumpArgs()
-  pretty.dump(self.args)
+  print(cjson.encode(self.args))
 end
 
 function PlanOutOp:getArgMixed(name)
@@ -57,7 +58,7 @@ function PlanOutOp:getArgIndexish(name)
 end
 
 -- Base PlanOut object --
-PlanOutOpSimple = PlanOutOp:new()
+local PlanOutOpSimple = PlanOutOp:new()
 
 function PlanOutOpSimple:simpleExcute(mapper)
   error "Not implemented"
@@ -72,7 +73,7 @@ function PlanOutOpSimple:execute(mapper)
 end
 
 -- Base PlanOut object --
-PlanOutOpUnary = PlanOutOpSimple:new()
+local PlanOutOpUnary = PlanOutOpSimple:new()
 
 function PlanOutOpUnary:simpleExecute()
   return self:unaryExecute(self:getArgMixed('value'))
@@ -87,7 +88,7 @@ function PlanOutOpUnary:unaryExecute(value)
 end
 
 -- Base PlanOut object --
-PlanOutOpBinary = PlanOutOpSimple:new()
+local PlanOutOpBinary = PlanOutOpSimple:new()
 
 function PlanOutOpBinary:simpleExecute()
   local left = self:getArgMixed('left');
@@ -103,7 +104,7 @@ function PlanOutOpBinary:binaryExecute(left, right)
 end
 
 -- Base PlanOut object --
-PlanOutOpCommutative = PlanOutOpSimple:new()
+local PlanOutOpCommutative = PlanOutOpSimple:new()
 
 function PlanOutOpCommutative:simpleExecute()
   return self:commutativeExecute(self:getArgList('values'));
@@ -116,3 +117,11 @@ end
 function PlanOutOpCommutative:commutativeExecute(values)
   error "Not implemented"
 end
+
+return {
+  PlanOutOpCommutative = PlanOutOpCommutative,
+  PlanOutOpBinary = PlanOutOpBinary,
+  PlanOutOpUnary = PlanOutOpUnary,
+  PlanOutOpSimple = PlanOutOpSimple,
+  PlanOutOp = PlanOutOp
+}

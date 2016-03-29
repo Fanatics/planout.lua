@@ -1,5 +1,4 @@
-require("lib.utils")
-local pretty = require 'pl.pretty'
+local utils = require("lib.utils")
 
 local globalInputArgs = {}
 local experimentSpecificInputArgs = {}
@@ -14,10 +13,10 @@ end
 local fetchInputs = function(args)
   if args == nil then return {} end
 
-  return resolveArgs(shallowcopy(args))
+  return resolveArgs(utils.shallowcopy(args))
 end
 
-function registerExperimentInput(key, value, experimentName)
+local registerExperimentInput = function(key, value, experimentName)
   if experimentName == nil then globalInputArgs[key] = value
   else
     if experimentSpecificInputArgs[experimentName] == nil then
@@ -27,7 +26,7 @@ function registerExperimentInput(key, value, experimentName)
   end
 end
 
-function clearExperimentInput(key, experimentName)
+local clearExperimentInput = function(key, experimentName)
   if experimentName == nil then globalInputArgs[key] = nil
   else
     if experimentSpecificInputArgs[experimentName] ~= nil then
@@ -36,10 +35,16 @@ function clearExperimentInput(key, experimentName)
   end
 end
 
-function getExperimentInputs(experimentName)
+local getExperimentInputs = function(experimentName)
   local inputArgs = fetchInputs(globalInputArgs)
   if experimentName ~= nil and experimentSpecificInputArgs[experimentName] ~= nil then
     return table.merge(inputArgs, fetchInputs(experimentSpecificInputArgs[experimentName]))
   end
   return inputArgs
 end
+
+return {
+  getExperimentInputs = getExperimentInputs,
+  clearExperimentInput = clearExperimentInput,
+  registerExperimentInput = registerExperimentInput
+}

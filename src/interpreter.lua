@@ -1,16 +1,12 @@
-require("lib.utils")
-require("ops.utils")
-require("ops.core")
-
-local pretty = require 'pl.pretty'
-
-local Experiment = require "experiment"
-local Assignment = require "assignment"
+local utils = require("lib.utils")
+local ops = require("ops.utils")
+local cjson = require("cjson")
+local Assignment = require("assignment")
 
 local Interpreter = {}
 
 function Interpreter:new(serialization, experimentSalt, inputs, environment)
-  return _new_(self, {}):init(serialization, experimentSalt, inputs, environment)
+  return utils._new_(self, {}):init(serialization, experimentSalt, inputs, environment)
 end
 
 function Interpreter:init(serialization, experimentSalt, inputs, environment)
@@ -23,7 +19,7 @@ function Interpreter:init(serialization, experimentSalt, inputs, environment)
   self._experimentSalt = experimentSalt
   self._evaluated = false
   self._inExperiment = false
-  self._inputs = shallowcopy(inputs)
+  self._inputs = utils.shallowcopy(inputs)
 
   return self
 end
@@ -33,7 +29,7 @@ function Interpreter:inExperiment()
 end
 
 function Interpreter:setEnv(newEnv)
-  self._env = deepCopy(newEnv);
+  self._env = utils.deepCopy(newEnv);
   return self;
 end
 
@@ -51,9 +47,10 @@ function Interpreter:getParams()
     local status, err = pcall(function()
       me:evaluate(me.serialization)
     end)
-    if instanceOf(err, StopPlanOutException) then
+    if utils.instanceOf(err, utils.StopPlanOutException) then
       self._inExperiment = err.inExperiment
     end
+    
     self._evaluated = true
   end
   return self._env:getParams();
@@ -80,7 +77,7 @@ end
 
 function Interpreter:evaluate(planoutCode)
   if type(planoutCode) == "table" and planoutCode.op ~= nil then
-    local oi = operatorInstance(planoutCode)
+    local oi = ops.operatorInstance(planoutCode)
     return oi:execute(self)
   elseif type(planoutCode) == "table" and planoutCode[1] ~= nil then
     local arr = {}

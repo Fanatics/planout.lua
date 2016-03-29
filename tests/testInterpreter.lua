@@ -1,8 +1,6 @@
 package.path = package.path .. ';../src/?.lua;src/?.lua;'
 local Interpreter = require 'interpreter'
 
-local pretty = require 'pl.pretty'
-
 EXPORT_ASSERT_TO_GLOBALS = true
 require('resources.luaunit')
 
@@ -90,7 +88,7 @@ local interpreterSalt = 'foo'
 function TestInterpreter:test_works_as_intended()
   local proc = Interpreter:new(compiled, interpreterSalt, {['userid'] = 123454})
   local params = proc:getParams()
-
+  
   assert(params['specific_goal'] == 1)
   assert(params['ratings_goal'] == 320)
 end

@@ -1,15 +1,11 @@
 package.path = package.path .. ";../src/?.lua;src/?.lua;"
-require("ops.random")
 local Experiment = require "experiment"
 local Interpreter = require "interpreter"
-
-local pretty = require 'pl.pretty'
 
 EXPORT_ASSERT_TO_GLOBALS = true
 require("resources.luaunit")
 
 TestExperiment = {}
-
 
 local BaseExperiment = Experiment:new()
 

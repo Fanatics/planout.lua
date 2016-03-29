@@ -1,24 +1,23 @@
-local pretty = require 'pl.pretty'
 local bc = require "bc"
 
-function _new_(self, instance)
+local _new_ = function(self, instance)
   instance = instance or {}
   setmetatable(instance, self)
   self.__index = self
   return instance
 end
 
-StopPlanOutException = {}
+local StopPlanOutException = {}
 
 function StopPlanOutException:new(inExperiment)
   return _new_(self, {inExperiment = inExperiment})
 end
 
-function isOperator(op)
+local isOperator = function(op)
   return type(op) == "table" and op.op ~= nil
 end
 
-function map(obj, func, context)
+local map = function(obj, func, context)
   local results = {}
   if type(obj) == "table" then
     for i, val in ipairs(obj) do
@@ -28,12 +27,13 @@ function map(obj, func, context)
   return results
 end
 
-function round(num, idp)
+local round = function(num, idp)
   local mult = 10^(idp or 0)
   return math.floor(num * mult + 0.5) / mult
 end
+local deepcopy
 
-function deepcopy(orig)
+deepcopy = function(orig)
     local orig_type = type(orig)
     local copy
     if orig_type == 'table' then
@@ -48,7 +48,7 @@ function deepcopy(orig)
     return copy
 end
 
-function shallowcopy(orig)
+local shallowcopy = function(orig)
     local orig_type = type(orig)
     local copy
     if orig_type == 'table' then
@@ -62,7 +62,7 @@ function shallowcopy(orig)
     return copy
 end
 
-function table.slice(tbl, first, last, step)
+table.slice = function(tbl, first, last, step)
   local sliced = {}
 
   for i = first or 1, last or #tbl, step or 1 do
@@ -72,7 +72,7 @@ function table.slice(tbl, first, last, step)
   return sliced
 end
 
-function instanceOf (subject, super)
+local instanceOf = function(subject, super)
 	super = tostring(super)
 	local mt = getmetatable(subject)
 
@@ -84,7 +84,7 @@ function instanceOf (subject, super)
 	end
 end
 
-function tablelength(T)
+local tablelength = function(T)
   local count = 0
   for _ in pairs(T) do count = count + 1 end
   return count
@@ -152,7 +152,7 @@ table.length = function(table)
   return #table
 end
 
-function hex2bc(s)
+local hex2bc = function(s)
 	local x=bc.number(0)
 	for i=1,#s do
 		x=16*x+tonumber(s:sub(i,i),16)
@@ -160,10 +160,24 @@ function hex2bc(s)
 	return x
 end
 
-function range(max, start)
+local range = function(max, start)
   local l = {}
   for i = start or 1, max do
     table.insert(l, i)
   end
   return l
 end
+
+return {
+  range = range,
+  hex2bc = hex2bc,
+  tablelength = tablelength,
+  instanceOf = instanceOf,
+  shallowcopy = shallowcopy,
+  deepcopy = deepcopy,
+  round = round,
+  map = map,
+  isOperator = isOperator,
+  StopPlanOutException = StopPlanOutException,
+  _new_ = _new_
+}

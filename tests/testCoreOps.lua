@@ -1,8 +1,6 @@
 package.path = package.path .. ";../src/?.lua;"
 local Interpreter = require "interpreter"
 
-local pretty = require 'pl.pretty'
-
 EXPORT_ASSERT_TO_GLOBALS = true
 require("resources.luaunit")
 
@@ -105,13 +103,13 @@ end
 
 function TestCoreOps:test_work_with_coalesce()
   local x = runConfigSingle({['op'] = 'coalesce', ['values'] = {nil}})
-  assert(x == nil)
+  assert(x == nil, "Nil is the only value")
 
   x = runConfigSingle({['op'] = 'coalesce', ['values'] = {nil, 42, nil}})
-  assert(x == 42)
+  assert(x == 42, "Nil is the first value")
 
   x = runConfigSingle({['op'] = 'coalesce', ['values'] = {nil, nil, 43}})
-  assert(x == 43)
+  assert(x == 43, "Nil is the first 2 values")
 end
 
 function TestCoreOps:test_work_with_length()

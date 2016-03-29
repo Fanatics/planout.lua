@@ -1,28 +1,37 @@
 package.path = package.path .. ";../?.lua"
-require("lib.utils")
-local pretty = require 'pl.pretty'
+local utils = require("lib.utils")
+local base = require("ops.base")
 
-require("ops.base")
+local map = utils.map
+local round = utils.round
+local deepcopy = utils.deepcopy
+
+local StopPlanOutException = utils.StopPlanOutException
+local PlanOutOp = base.PlanOutOp
+local PlanOutOpSimple = base.PlanOutOpSimple
+local PlanOutOpCommutative = base.PlanOutOpCommutative
+local PlanOutOpBinary = base.PlanOutOpBinary
+local PlanOutOpUnary = base.PlanOutOpUnary
 
 local jsIs = function(value)
   return not (not value or value == 0)
 end
 
-Literal = PlanOutOp:new()
+local Literal = PlanOutOp:new()
 
 function Literal:execute(mapper)
   return self:getArgMixed('value')
 end
 
 
-Get = PlanOutOp:new()
+local Get = PlanOutOp:new()
 
 function Get:execute(mapper)
   return mapper:get(self:getArgString('var'))
 end
 
 
-Seq = PlanOutOp:new()
+local Seq = PlanOutOp:new()
 
 function Seq:execute(mapper)
   local sequence = self:getArgList('seq')
@@ -32,14 +41,14 @@ function Seq:execute(mapper)
 end
 
 
-Return = PlanOutOp:new()
+local Return = PlanOutOp:new()
 
 function Return:execute(mapper)
   local value = mapper:evaluate(self:getArgMixed('value'))
   error(StopPlanOutException:new(value ~= false and value ~= 0))
 end
 
-Set = PlanOutOp:new()
+local Set = PlanOutOp:new()
 
 function Set:execute(mapper)
   local variable = self:getArgString('var')
@@ -47,7 +56,7 @@ function Set:execute(mapper)
 
   if mapper:hasOverride(variable) then return end
 
-  if isOperator(value) and value.salt == nil then value.salt = variable end
+  if utils.isOperator(value) and value.salt == nil then value.salt = variable end
 
   if variable == "experimentSalt" then mapper.experimentSalt = value end
 
@@ -55,7 +64,7 @@ function Set:execute(mapper)
 end
 
 
-Arr = PlanOutOp:new()
+local Arr = PlanOutOp:new()
 
 function Arr:execute(mapper)
   return map(self:getArgList('values'), function(value)
@@ -64,7 +73,7 @@ function Arr:execute(mapper)
 end
 
 
-Coalesce = PlanOutOp:new()
+local Coalesce = PlanOutOp:new()
 
 function Coalesce:execute(mapper)
   local values = self:getArgList('values')
@@ -77,7 +86,7 @@ function Coalesce:execute(mapper)
 end
 
 
-Index = PlanOutOpSimple:new()
+local Index = PlanOutOpSimple:new()
 
 function Index:simpleExecute()
   local base = self:getArgIndexish('base') or {}
@@ -90,7 +99,7 @@ function Index:simpleExecute()
 end
 
 
-Cond = PlanOutOp:new()
+local Cond = PlanOutOp:new()
 
 function Cond:execute(mapper)
   local list = self:getArgList('cond')
@@ -103,7 +112,7 @@ function Cond:execute(mapper)
 end
 
 
-And = PlanOutOp:new()
+local And = PlanOutOp:new()
 
 function And:execute(mapper)
   local list = self:getArgList('values')
@@ -113,7 +122,7 @@ function And:execute(mapper)
   return true
 end
 
-Or = PlanOutOp:new()
+local Or = PlanOutOp:new()
 
 function Or:execute(mapper)
   local list = self:getArgList('values')
@@ -124,7 +133,7 @@ function Or:execute(mapper)
 end
 
 
-Product = PlanOutOpCommutative:new()
+local Product = PlanOutOpCommutative:new()
 
 function Product:commutativeExecute(values)
   local result = 1
@@ -135,7 +144,7 @@ function Product:commutativeExecute(values)
 end
 
 
-Sum = PlanOutOpCommutative:new()
+local Sum = PlanOutOpCommutative:new()
 
 function Sum:commutativeExecute(values)
   local result = 0
@@ -145,7 +154,7 @@ function Sum:commutativeExecute(values)
   return result
 end
 
-Equals = PlanOutOpBinary:new();
+local Equals = PlanOutOpBinary:new();
 
 function Equals:binaryExecute(left, right)
   return left == right
@@ -156,49 +165,49 @@ function Equals:getInfixString()
 end
 
 
-GreaterThan = PlanOutOpBinary:new();
+local GreaterThan = PlanOutOpBinary:new();
 
 function GreaterThan:binaryExecute(left, right)
   return left > right
 end
 
 
-LessThan = PlanOutOpBinary:new();
+local LessThan = PlanOutOpBinary:new();
 
 function LessThan:binaryExecute(left, right)
   return left < right
 end
 
 
-LessThanOrEqualTo = PlanOutOpBinary:new();
+local LessThanOrEqualTo = PlanOutOpBinary:new();
 
 function LessThanOrEqualTo:binaryExecute(left, right)
   return left <= right
 end
 
 
-GreaterThanOrEqualTo = PlanOutOpBinary:new();
+local GreaterThanOrEqualTo = PlanOutOpBinary:new();
 
 function GreaterThanOrEqualTo:binaryExecute(left, right)
   return left >= right
 end
 
 
-Mod = PlanOutOpBinary:new();
+local Mod = PlanOutOpBinary:new();
 
 function Mod:binaryExecute(left, right)
   return left % right
 end
 
 
-Divide = PlanOutOpBinary:new();
+local Divide = PlanOutOpBinary:new();
 
 function Divide:binaryExecute(left, right)
   return left / right
 end
 
 
-Round = PlanOutOpUnary:new();
+local Round = PlanOutOpUnary:new();
 
 function Round:unaryExecute(value)
   return round(value)
@@ -206,7 +215,7 @@ end
 
 
 
-Not = PlanOutOpUnary:new();
+local Not = PlanOutOpUnary:new();
 
 function Not:unaryExecute(value)
   return not value or value == 0
@@ -217,7 +226,7 @@ function Not:getUnaryString()
 end
 
 
-Negative = PlanOutOpUnary:new()
+local Negative = PlanOutOpUnary:new()
 
 function Negative:unaryExecute(value)
   return 0 - value
@@ -228,14 +237,14 @@ function Negative:getUnaryString()
 end
 
 
-Length = PlanOutOpUnary:new();
+local Length = PlanOutOpUnary:new();
 
 function Length:unaryExecute(value)
   return #value
 end
 
 
-Min = PlanOutOpCommutative:new()
+local Min = PlanOutOpCommutative:new()
 
 function Min:commutativeExecute(values)
   return math.min(unpack(values))
@@ -243,14 +252,14 @@ end
 
 
 
-Max = PlanOutOpCommutative:new()
+local Max = PlanOutOpCommutative:new()
 
 function Max:commutativeExecute(values)
   return math.max(unpack(values))
 end
 
 
-Map = PlanOutOpSimple:new()
+local Map = PlanOutOpSimple:new()
 
 function Map:simpleExecute()
   local copy = deepcopy(self.args)
@@ -258,3 +267,32 @@ function Map:simpleExecute()
   copy.salt = nil
   return copy
 end
+
+return {
+  Map = Map,
+  Max = Max,
+  Min = Min,
+  Length = Length,
+  Negative = Negative,
+  Not = Not,
+  Round = Round,
+  Divide = Divide,
+  Mod = Mod,
+  GreaterThanOrEqualTo = GreaterThanOrEqualTo,
+  LessThanOrEqualTo = LessThanOrEqualTo,
+  LessThan = LessThan,
+  GreaterThan = GreaterThan,
+  Equals = Equals,
+  Sum = Sum,
+  Product = Product,
+  Or = Or,
+  And = And,
+  Cond = Cond,
+  Index = Index,
+  Coalesce = Coalesce,
+  Arr = Arr,
+  Set = Set,
+  Return = Return,
+  Seq = Seq,
+  Get = Get
+}

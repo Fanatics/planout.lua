@@ -13,6 +13,8 @@ local PlanOutOpCommutative = base.PlanOutOpCommutative
 local PlanOutOpBinary = base.PlanOutOpBinary
 local PlanOutOpUnary = base.PlanOutOpUnary
 
+local cjson = require("cjson")
+
 local jsIs = function(value)
   return not (not value or value == 0)
 end

@@ -346,3 +346,20 @@ elseif redis.call("EXISTS", dos) == 1 then
 end
 
 return cjson.encode(result)
+
+
+local include, require = (function()
+  local obj = {}
+  local def = {}
+
+  local include = function(name, def)
+    def[name] = def
+  end
+
+  local require = function(name)
+    if obj[name] == nil and type(def[name]) == "function" then obj[name] = def[name]() end
+    return obj[name]
+  end
+
+  return include, require
+end)()

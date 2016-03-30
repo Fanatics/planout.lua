@@ -262,7 +262,7 @@ end
 local Map = PlanOutOpSimple:new()
 
 function Map:simpleExecute()
-  local copy = deepcopy(self.args)
+  local copy = utils.deepcopy(self.args)
   copy.op = nil
   copy.salt = nil
   return copy

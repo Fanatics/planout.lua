@@ -33,7 +33,7 @@ local round = function(num, idp)
 end
 local deepcopy
 
-deepcopy = function(orig)
+local deepcopy = function(orig)
     local orig_type = type(orig)
     local copy
     if orig_type == 'table' then

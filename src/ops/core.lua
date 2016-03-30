@@ -13,6 +13,8 @@ local PlanOutOpCommutative = base.PlanOutOpCommutative
 local PlanOutOpBinary = base.PlanOutOpBinary
 local PlanOutOpUnary = base.PlanOutOpUnary
 
+local cjson = require("cjson")
+
 local jsIs = function(value)
   return not (not value or value == 0)
 end
@@ -262,7 +264,7 @@ end
 local Map = PlanOutOpSimple:new()
 
 function Map:simpleExecute()
-  local copy = utils.deepcopy(self.args)
+  local copy = deepcopy(self.args)
   copy.op = nil
   copy.salt = nil
   return copy

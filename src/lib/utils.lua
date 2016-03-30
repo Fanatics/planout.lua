@@ -31,11 +31,13 @@ local round = function(num, idp)
   local mult = 10^(idp or 0)
   return math.floor(num * mult + 0.5) / mult
 end
-local deepcopy
 
-local deepcopy = function(orig)
+local deepcopy
+-- Delcaration must be separated from definition because it is recursive
+deepcopy = function(orig)
+  local copy
+  local status, err = pcall(function()
     local orig_type = type(orig)
-    local copy
     if orig_type == 'table' then
         copy = {}
         for orig_key, orig_value in next, orig, nil do
@@ -45,7 +47,9 @@ local deepcopy = function(orig)
     else -- number, string, boolean, etc
         copy = orig
     end
-    return copy
+  end)
+  if err ~= nil then print(cjson(err)) end
+  return copy
 end
 
 local shallowcopy = function(orig)

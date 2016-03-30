@@ -30,7 +30,8 @@ function PlanOutOpRandom:getHash(appendedUnit)
   local fullSalt
   if self.args.full_salt ~= nil then fullSalt = self:getArgString('full_salt')
   else
-    local salt = self:getArgString('salt')
+    local salt
+    if self.args.salt ~= nil then salt = self:getArgString('salt') else salt = self.mapper:get('experimentSalt') end
     fullSalt = self.mapper:get('experimentSalt') .. "." .. salt
   end
 
